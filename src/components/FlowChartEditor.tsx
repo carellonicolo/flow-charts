@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useRef, useState, useEffect } from 'react';
 import ReactFlow, {
   addEdge,
   useNodesState,
@@ -13,6 +13,8 @@ import type {
   Connection,
   NodeTypes,
   ReactFlowInstance,
+  NodeChange,
+  EdgeChange,
 } from 'reactflow';
 import CustomNode from './nodes/CustomNode';
 import type { FlowChartNodeData } from '../types/flowchart';
@@ -32,53 +34,48 @@ const getId = () => `node_${nodeId++}`;
 
 export default function FlowChartEditor({ onNodesChange, onEdgesChange }: FlowChartEditorProps) {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
-  const [nodes, setNodes, onNodesChangeInternal] = useNodesState<FlowChartNodeData>([]);
-  const [edges, setEdges, onEdgesChangeInternal] = useEdgesState([]);
+  const [nodes, setNodes, onNodesChangeHandler] = useNodesState<FlowChartNodeData>([]);
+  const [edges, setEdges, onEdgesChangeHandler] = useEdgesState([]);
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
 
-  // Notifica i cambiamenti al componente padre
+  // Notifica il componente padre quando cambiano i nodi
+  useEffect(() => {
+    onNodesChange(nodes);
+  }, [nodes, onNodesChange]);
+
+  // Notifica il componente padre quando cambiano gli edges
+  useEffect(() => {
+    onEdgesChange(edges);
+  }, [edges, onEdgesChange]);
+
   const handleNodesChange = useCallback(
-    (changes: any) => {
-      onNodesChangeInternal(changes);
-      // Usa un timeout per garantire che lo stato sia aggiornato
-      setTimeout(() => {
-        setNodes((nds) => {
-          onNodesChange(nds);
-          return nds;
-        });
-      }, 0);
+    (changes: NodeChange[]) => {
+      onNodesChangeHandler(changes);
     },
-    [onNodesChangeInternal, onNodesChange, setNodes]
+    [onNodesChangeHandler]
   );
 
   const handleEdgesChange = useCallback(
-    (changes: any) => {
-      onEdgesChangeInternal(changes);
-      setTimeout(() => {
-        setEdges((eds) => {
-          onEdgesChange(eds);
-          return eds;
-        });
-      }, 0);
+    (changes: EdgeChange[]) => {
+      onEdgesChangeHandler(changes);
     },
-    [onEdgesChangeInternal, onEdgesChange, setEdges]
+    [onEdgesChangeHandler]
   );
 
   const onConnect = useCallback(
     (params: Connection) => {
-      const newEdge = {
-        ...params,
-        animated: true,
-        style: { stroke: '#64748b', strokeWidth: 2 },
-      };
-
-      setEdges((eds) => {
-        const updated = addEdge(newEdge, eds);
-        onEdgesChange(updated);
-        return updated;
-      });
+      setEdges((eds) =>
+        addEdge(
+          {
+            ...params,
+            animated: true,
+            style: { stroke: '#64748b', strokeWidth: 2 },
+          },
+          eds
+        )
+      );
     },
-    [setEdges, onEdgesChange]
+    [setEdges]
   );
 
   const onDragOver = useCallback((event: React.DragEvent) => {
@@ -112,13 +109,9 @@ export default function FlowChartEditor({ onNodesChange, onEdgesChange }: FlowCh
         data: createNodeData(nodeType),
       };
 
-      setNodes((nds) => {
-        const updated = [...nds, newNode];
-        onNodesChange(updated);
-        return updated;
-      });
+      setNodes((nds) => [...nds, newNode]);
     },
-    [reactFlowInstance, setNodes, onNodesChange]
+    [reactFlowInstance, setNodes]
   );
 
   const onNodeDoubleClick = useCallback(
@@ -189,14 +182,12 @@ export default function FlowChartEditor({ onNodesChange, onEdgesChange }: FlowCh
       }
 
       if (newData) {
-        setNodes((nds) => {
-          const updated = nds.map((n) => (n.id === node.id ? { ...n, data: newData } : n));
-          onNodesChange(updated);
-          return updated;
-        });
+        setNodes((nds) =>
+          nds.map((n) => (n.id === node.id ? { ...n, data: newData } : n))
+        );
       }
     },
-    [setNodes, onNodesChange]
+    [setNodes]
   );
 
   return (

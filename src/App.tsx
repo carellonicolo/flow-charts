@@ -23,11 +23,11 @@ function App() {
 
   const handleNodesChange = useCallback((newNodes: Node<FlowChartNodeData>[]) => {
     setNodes(newNodes);
-  }, []);
+  }, [setNodes]);
 
   const handleEdgesChange = useCallback((newEdges: Edge[]) => {
     setEdges(newEdges);
-  }, []);
+  }, [setEdges]);
 
   const handleRun = useCallback(async () => {
     if (nodes.length === 0) {
