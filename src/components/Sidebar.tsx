@@ -83,13 +83,25 @@ export default function Sidebar() {
   };
 
   return (
-    <div className="w-64 bg-white border-r border-gray-200 p-4 overflow-y-auto">
-      <h2 className="text-lg font-bold text-gray-800 mb-4">
-        📦 Blocchi Flow Chart
+    <div
+      className="w-64 border-r p-4 overflow-y-auto transition-theme"
+      style={{
+        background: 'var(--bg-elevated)',
+        borderColor: 'var(--border-primary)',
+      }}
+    >
+      <h2
+        className="text-lg font-bold mb-4 transition-theme"
+        style={{ color: 'var(--text-primary)' }}
+      >
+        📦 Blocchi
       </h2>
 
-      <p className="text-xs text-gray-600 mb-4">
-        Trascina i blocchi nel canvas per creare il tuo algoritmo
+      <p
+        className="text-xs mb-4 transition-theme"
+        style={{ color: 'var(--text-secondary)' }}
+      >
+        Trascina i blocchi nel canvas
       </p>
 
       <div className="space-y-2">
@@ -109,11 +121,24 @@ export default function Sidebar() {
         ))}
       </div>
 
-      <div className="mt-6 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-        <h3 className="text-sm font-bold text-blue-800 mb-2">💡 Suggerimento</h3>
-        <p className="text-xs text-blue-700">
-          Ogni flow chart deve iniziare con un blocco <strong>Inizio</strong> e
-          terminare con un blocco <strong>Fine</strong>.
+      <div
+        className="mt-6 p-3 border rounded-lg transition-theme"
+        style={{
+          background: 'var(--bg-secondary)',
+          borderColor: 'var(--border-primary)',
+        }}
+      >
+        <h3
+          className="text-sm font-bold mb-2 transition-theme"
+          style={{ color: 'var(--text-primary)' }}
+        >
+          💡 Suggerimento
+        </h3>
+        <p
+          className="text-xs transition-theme"
+          style={{ color: 'var(--text-secondary)' }}
+        >
+          Doppio click su un blocco per modificarlo
         </p>
       </div>
     </div>
