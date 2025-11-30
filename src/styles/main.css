@@ -102,3 +102,40 @@ body {
   color: white;
   border-color: var(--primary-color);
 }
+
+/* Layout Containers */
+.app-container {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.main-content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ReactFlow Controls Dark Mode Override */
+[data-theme="dark"] .react-flow__controls {
+  box-shadow: 0 0 2px 1px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="dark"] .react-flow__controls-button {
+  background: var(--glass-bg);
+  border-bottom: 1px solid var(--glass-border);
+  fill: var(--text-color);
+  color: var(--text-color);
+}
+
+[data-theme="dark"] .react-flow__controls-button:hover {
+  background: var(--primary-color);
+  fill: white;
+  color: white;
+}
+
+[data-theme="dark"] .react-flow__controls-button svg {
+  fill: currentColor;
+}
