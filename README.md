@@ -1,194 +1,73 @@
-# 📊 FlowChart Learning Studio
+# React + TypeScript + Vite
 
-Un'applicazione web interattiva per imparare i fondamenti della programmazione attraverso flow chart e pseudocodice.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## ✨ Caratteristiche
+Currently, two official plugins are available:
 
-### 🎨 Editor Flow Chart Drag & Drop
-- Interfaccia visuale intuitiva con drag & drop
-- Blocchi colorati per ogni costrutto di programmazione
-- Collegamento facile tra i blocchi
-- Modifica tramite doppio click
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-### 🔄 Conversione Real-Time a Pseudocodice
-- Conversione automatica 1:1 da flow chart a pseudocodice
-- Aggiornamento in tempo reale mentre costruisci
-- Sintassi pseudocodice in italiano chiara e leggibile
-- Evidenziazione del blocco in esecuzione
+## React Compiler
 
-### ▶️ Simulatore di Esecuzione
-- Esegui i tuoi algoritmi passo dopo passo
-- Console di output interattiva
-- Visualizzazione delle variabili in tempo reale
-- Controlli per esecuzione, pausa e stop
-- Input interattivo durante l'esecuzione
-- Protezione contro loop infiniti
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-### 💾 Salva e Carica
-- Salva i tuoi progetti in formato JSON
-- Carica progetti salvati in precedenza
-- Condividi i tuoi flow chart con altri studenti
+## Expanding the ESLint configuration
 
-## 🧩 Costrutti Supportati
+If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
 
-| Blocco | Descrizione | Pseudocodice |
-|--------|-------------|--------------|
-| **Inizio** | Punto di partenza del programma | `INIZIO` |
-| **Fine** | Punto di fine del programma | `FINE` |
-| **Input** | Leggi un valore dall'utente | `LEGGI variabile` |
-| **Output** | Mostra un valore all'utente | `SCRIVI espressione` |
-| **Assegnazione** | Assegna un valore a una variabile | `variabile = espressione` |
-| **Decisione** | Condizione if-else | `SE condizione ALLORA ... ALTRIMENTI ... FINE_SE` |
-| **Ciclo Mentre** | Loop while | `MENTRE condizione ESEGUI ... FINE_MENTRE` |
-| **Ciclo Per** | Loop for | `PER var DA inizio A fine PASSO step ESEGUI ... FINE_PER` |
+```js
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
 
-## 🚀 Come Usare
+      // Remove tseslint.configs.recommended and replace with this
+      tseslint.configs.recommendedTypeChecked,
+      // Alternatively, use this for stricter rules
+      tseslint.configs.strictTypeChecked,
+      // Optionally, add this for stylistic rules
+      tseslint.configs.stylisticTypeChecked,
 
-### Installazione
-
-```bash
-npm install
+      // Other configs...
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
 ```
 
-### Avvio in Modalità Sviluppo
+You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
-```bash
-npm run dev
+```js
+// eslint.config.js
+import reactX from 'eslint-plugin-react-x'
+import reactDom from 'eslint-plugin-react-dom'
+
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+      // Enable lint rules for React
+      reactX.configs['recommended-typescript'],
+      // Enable lint rules for React DOM
+      reactDom.configs.recommended,
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
 ```
-
-### Build per Produzione
-
-```bash
-npm run build
-```
-
-### Anteprima Build
-
-```bash
-npm run preview
-```
-
-## 📚 Guida Rapida
-
-### 1. Creare un Flow Chart
-
-1. Trascina il blocco **Inizio** dalla sidebar al canvas
-2. Aggiungi i blocchi necessari per il tuo algoritmo
-3. Collega i blocchi trascinando dalle maniglie (cerchietti)
-4. Fai doppio click su un blocco per modificarne i parametri
-5. Termina con un blocco **Fine**
-
-### 2. Modificare i Blocchi
-
-- **Doppio click** su qualsiasi blocco per modificarlo
-- Inserisci i parametri richiesti (variabili, espressioni, condizioni)
-- Il pseudocodice si aggiorna automaticamente in tempo reale
-
-### 3. Eseguire il Programma
-
-1. Clicca sul pulsante **Esegui** nella console
-2. Inserisci i valori richiesti quando richiesto
-3. Osserva l'esecuzione e l'output nella console
-4. Visualizza le variabili in tempo reale
-
-### 4. Esempi
-
-Clicca sul pulsante **Esempi** nell'header per vedere esempi guidati:
-- Somma di due numeri
-- Conta fino a 10
-- E molto altro...
-
-## 🎯 Esempi di Utilizzo
-
-### Esempio 1: Somma di Due Numeri
-
-```
-INIZIO
-  LEGGI a
-  LEGGI b
-  somma = a + b
-  SCRIVI somma
-FINE
-```
-
-### Esempio 2: Numero Pari o Dispari
-
-```
-INIZIO
-  LEGGI numero
-  SE numero % 2 == 0 ALLORA
-    SCRIVI "Pari"
-  ALTRIMENTI
-    SCRIVI "Dispari"
-  FINE_SE
-FINE
-```
-
-### Esempio 3: Conta fino a N
-
-```
-INIZIO
-  LEGGI n
-  PER i DA 1 A n PASSO 1 ESEGUI
-    SCRIVI i
-  FINE_PER
-FINE
-```
-
-## 🛠️ Tecnologie Utilizzate
-
-- **React 18** - Framework UI moderno
-- **TypeScript** - Type safety e autocompletamento
-- **Vite** - Build tool veloce e moderno
-- **React Flow** - Libreria per editor flow chart
-- **Tailwind CSS** - Styling utility-first
-- **Lucide React** - Icone moderne
-
-## 🎓 Obiettivi Didattici
-
-Questa applicazione è progettata per:
-
-1. **Introdurre la logica di programmazione** senza la complessità della sintassi
-2. **Visualizzare il flusso di esecuzione** in modo chiaro e intuitivo
-3. **Collegare flow chart e pseudocodice** con mapping 1:1
-4. **Permettere sperimentazione** con feedback immediato
-5. **Preparare gli studenti** al passaggio a linguaggi di programmazione reali
-
-## 📖 Per gli Insegnanti
-
-### Suggerimenti per l'Uso in Classe
-
-- Iniziate con esempi semplici (input/output)
-- Introducete gradualmente le condizioni
-- Fate esercitare con i cicli
-- Incoraggiate gli studenti a sperimentare
-- Usate la funzione Salva/Carica per raccogliere i compiti
-
-### Progressione Suggerita
-
-1. **Settimana 1-2**: Sequenze lineari (input, output, assegnazione)
-2. **Settimana 3-4**: Condizioni (if-else)
-3. **Settimana 5-6**: Cicli (while e for)
-4. **Settimana 7-8**: Algoritmi complessi combinando tutti i costrutti
-
-## 🤝 Contribuire
-
-Questo progetto è aperto a contributi! Se hai idee per miglioramenti:
-
-1. Fork il repository
-2. Crea un branch per la tua feature
-3. Commit le tue modifiche
-4. Push al branch
-5. Apri una Pull Request
-
-## 📝 Licenza
-
-Questo progetto è distribuito sotto licenza MIT.
-
-## 👨‍💻 Autore
-
-Creato con ❤️ per rendere la programmazione accessibile a tutti gli studenti.
-
----
-
-**Buon apprendimento! 🚀**

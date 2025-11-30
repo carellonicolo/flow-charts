@@ -1,146 +1,199 @@
-import { NodeType } from '../types/flowchart';
-import {
-  Circle,
-  Square,
-  Diamond,
-  ArrowDownToLine,
-  ArrowUpFromLine,
-  RefreshCw,
-  RotateCw,
-} from 'lucide-react';
+import React, { useState } from 'react';
 
-interface NodeTemplate {
-  type: NodeType;
-  label: string;
-  icon: React.ReactElement;
-  description: string;
-  color: string;
-}
+import { Play, Square, ArrowRight, Save, LogOut, Diamond, Github, Mail, HelpCircle, MessageSquare } from 'lucide-react';
+import { HelpModal } from './HelpModal';
 
-const nodeTemplates: NodeTemplate[] = [
-  {
-    type: NodeType.START,
-    label: 'Inizio',
-    icon: <Circle className="w-5 h-5" />,
-    description: 'Punto di partenza del programma',
-    color: 'bg-green-100 border-green-500 hover:bg-green-200',
-  },
-  {
-    type: NodeType.END,
-    label: 'Fine',
-    icon: <Circle className="w-5 h-5" />,
-    description: 'Punto di fine del programma',
-    color: 'bg-red-100 border-red-500 hover:bg-red-200',
-  },
-  {
-    type: NodeType.INPUT,
-    label: 'Input',
-    icon: <ArrowDownToLine className="w-5 h-5" />,
-    description: 'Leggi un valore dall\'utente',
-    color: 'bg-blue-100 border-blue-500 hover:bg-blue-200',
-  },
-  {
-    type: NodeType.OUTPUT,
-    label: 'Output',
-    icon: <ArrowUpFromLine className="w-5 h-5" />,
-    description: 'Mostra un valore all\'utente',
-    color: 'bg-purple-100 border-purple-500 hover:bg-purple-200',
-  },
-  {
-    type: NodeType.PROCESS,
-    label: 'Assegnazione',
-    icon: <Square className="w-5 h-5" />,
-    description: 'Assegna un valore a una variabile',
-    color: 'bg-yellow-100 border-yellow-500 hover:bg-yellow-200',
-  },
-  {
-    type: NodeType.DECISION,
-    label: 'Decisione',
-    icon: <Diamond className="w-5 h-5" />,
-    description: 'Se-Altrimenti condizionale',
-    color: 'bg-orange-100 border-orange-500 hover:bg-orange-200',
-  },
-  {
-    type: NodeType.WHILE,
-    label: 'Ciclo Mentre',
-    icon: <RefreshCw className="w-5 h-5" />,
-    description: 'Ripeti mentre la condizione è vera',
-    color: 'bg-pink-100 border-pink-500 hover:bg-pink-200',
-  },
-  {
-    type: NodeType.FOR,
-    label: 'Ciclo Per',
-    icon: <RotateCw className="w-5 h-5" />,
-    description: 'Ripeti per un numero di volte',
-    color: 'bg-pink-100 border-pink-500 hover:bg-pink-200',
-  },
-];
+const SidebarItem = ({ type, label, description, icon: Icon, color, helpContent, onHelp }: any) => {
+    const onDragStart = (event: React.DragEvent, nodeType: string, nodeLabel: string) => {
+        event.dataTransfer.setData('application/reactflow', nodeType);
+        event.dataTransfer.setData('application/reactflow/label', nodeLabel);
+        event.dataTransfer.effectAllowed = 'move';
+    };
 
-export default function Sidebar() {
-  const onDragStart = (event: React.DragEvent, nodeType: NodeType) => {
-    event.dataTransfer.setData('application/reactflow', nodeType);
-    event.dataTransfer.effectAllowed = 'move';
-  };
-
-  return (
-    <div
-      className="w-64 border-r p-4 overflow-y-auto transition-theme"
-      style={{
-        background: 'var(--bg-elevated)',
-        borderColor: 'var(--border-primary)',
-      }}
-    >
-      <h2
-        className="text-lg font-bold mb-4 transition-theme"
-        style={{ color: 'var(--text-primary)' }}
-      >
-        📦 Blocchi
-      </h2>
-
-      <p
-        className="text-xs mb-4 transition-theme"
-        style={{ color: 'var(--text-secondary)' }}
-      >
-        Trascina i blocchi nel canvas
-      </p>
-
-      <div className="space-y-2">
-        {nodeTemplates.map((template) => (
-          <div
-            key={template.type}
-            className={`${template.color} border-2 rounded-lg p-3 cursor-move transition-all hover:shadow-md`}
+    return (
+        <div
+            className="dndnode"
+            onDragStart={(event) => onDragStart(event, type, label)}
             draggable
-            onDragStart={(e) => onDragStart(e, template.type)}
-          >
-            <div className="flex items-center gap-2 mb-1">
-              {template.icon}
-              <span className="font-semibold text-sm">{template.label}</span>
+            style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                padding: '12px',
+                marginBottom: '10px',
+                borderRadius: '8px',
+                background: 'var(--glass-bg)',
+                border: '1px solid var(--glass-border)',
+                cursor: 'grab',
+                color: 'var(--text-color)',
+                transition: 'all 0.2s ease',
+                position: 'relative'
+            }}
+        >
+            <Icon size={18} color={color} style={{ flexShrink: 0 }} />
+            <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+                <span style={{ fontWeight: 500, lineHeight: '1.2' }}>{label}</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>{description}</span>
             </div>
-            <p className="text-xs text-gray-600">{template.description}</p>
-          </div>
-        ))}
-      </div>
+            <button
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onHelp(label, helpContent);
+                }}
+                style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: 'var(--text-secondary)',
+                    cursor: 'pointer',
+                    padding: '4px',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    opacity: 0.7,
+                    transition: 'opacity 0.2s'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+                onMouseLeave={(e) => e.currentTarget.style.opacity = '0.7'}
+            >
+                <HelpCircle size={16} />
+            </button>
+        </div>
+    );
+};
 
-      <div
-        className="mt-6 p-3 border rounded-lg transition-theme"
-        style={{
-          background: 'var(--bg-secondary)',
-          borderColor: 'var(--border-primary)',
-        }}
-      >
-        <h3
-          className="text-sm font-bold mb-2 transition-theme"
-          style={{ color: 'var(--text-primary)' }}
-        >
-          💡 Suggerimento
-        </h3>
-        <p
-          className="text-xs transition-theme"
-          style={{ color: 'var(--text-secondary)' }}
-        >
-          Doppio click su un blocco per modificarlo
-        </p>
-      </div>
-    </div>
-  );
-}
+export const Sidebar = () => {
+    const [modalOpen, setModalOpen] = useState(false);
+    const [modalTitle, setModalTitle] = useState('');
+    const [modalContent, setModalContent] = useState('');
+
+    const openHelp = (title: string, content: string) => {
+        setModalTitle(title);
+        setModalContent(content);
+        setModalOpen(true);
+    };
+
+    return (
+        <aside className="glass-panel" style={{
+            width: '250px',
+            padding: '20px',
+            margin: '20px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '15px',
+            height: 'calc(100vh - 40px)'
+        }}>
+            <div style={{ marginBottom: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <img src="/logo.png" alt="Logo" style={{ width: '32px', height: '32px', borderRadius: '8px' }} />
+                    <h2 style={{ margin: 0, fontSize: '1.5rem', background: 'linear-gradient(to right, #6366f1, #a855f7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Flow Chart</h2>
+                </div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '4px', fontStyle: 'italic', marginLeft: '42px' }}>
+                    Powered by prof. Carello
+                </div>
+            </div>
+
+            <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '10px' }}>
+                Drag and drop nodes to the editor.
+            </div>
+
+            <SidebarItem
+                type="start"
+                label="Start"
+                description="Inizio del flusso"
+                icon={Play}
+                color="var(--node-start-bg)"
+                helpContent="Il punto di partenza del tuo algoritmo. Ogni flowchart deve averne uno."
+                onHelp={openHelp}
+            />
+            <SidebarItem
+                type="process"
+                label="Process"
+                description="Esegue un'azione"
+                icon={ArrowRight}
+                color="var(--node-process-bg)"
+                helpContent="Esegue calcoli o assegnazioni (es. x = x + 1)."
+                onHelp={openHelp}
+            />
+            <SidebarItem
+                type="decision"
+                label="Decision"
+                description="Controlla condizione"
+                icon={Diamond}
+                color="var(--node-decision-bg)"
+                helpContent="Bivio logico. Se la condizione è vera va da una parte, altrimenti dall'altra."
+                onHelp={openHelp}
+            />
+            <SidebarItem
+                type="input"
+                label="Input"
+                description="Legge un valore"
+                icon={Save}
+                color="var(--node-input-bg)"
+                helpContent="Chiede un dato all'utente e lo salva in una variabile."
+                onHelp={openHelp}
+            />
+            <SidebarItem
+                type="output"
+                label="Output"
+                description="Stampa un valore"
+                icon={LogOut}
+                color="var(--node-input-bg)"
+                helpContent="Mostra un messaggio o il valore di una variabile a schermo."
+                onHelp={openHelp}
+            />
+            <SidebarItem
+                type="comment"
+                label="Comment"
+                description="Nota testuale"
+                icon={MessageSquare}
+                color="#fbbf24"
+                helpContent="Aggiungi una nota o un commento che non influenza l'esecuzione del programma."
+                onHelp={openHelp}
+            />
+            <SidebarItem
+                type="end"
+                label="End"
+                description="Fine del flusso"
+                icon={Square}
+                color="var(--node-end-bg)"
+                helpContent="Termina l'esecuzione del flowchart."
+                onHelp={openHelp}
+            />
+
+            <div style={{ marginTop: 'auto', paddingTop: '20px', borderTop: '1px solid var(--glass-border)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <a
+                    href="https://github.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn"
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        background: '#24292e',
+                        color: 'white',
+                        textDecoration: 'none',
+                        fontSize: '0.9rem'
+                    }}
+                >
+                    <Github size={16} />
+                    GitHub Repo
+                </a>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', color: 'var(--text-secondary)', justifyContent: 'center' }}>
+                    <Mail size={14} />
+                    <a href="mailto:info@nicolocarello.it" style={{ color: 'inherit', textDecoration: 'none' }}>info@nicolocarello.it</a>
+                </div>
+            </div>
+
+            <HelpModal
+                isOpen={modalOpen}
+                onClose={() => setModalOpen(false)}
+                title={modalTitle}
+                content={modalContent}
+            />
+        </aside>
+    );
+};
