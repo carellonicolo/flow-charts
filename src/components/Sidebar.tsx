@@ -74,15 +74,7 @@ export const Sidebar = () => {
     };
 
     return (
-        <aside className="glass-panel" style={{
-            width: '250px',
-            padding: '20px',
-            margin: '20px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '15px',
-            height: 'calc(100vh - 40px)'
-        }}>
+        <aside className="glass-panel sidebar-container">
             <div style={{ marginBottom: '10px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <img src="/logo.png" alt="Logo" style={{ width: '32px', height: '32px', borderRadius: '8px' }} />

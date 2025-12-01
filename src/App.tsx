@@ -1,6 +1,7 @@
+```javascript
 import React, { useState, useRef, useEffect } from 'react';
 import { useNodesState, useEdgesState } from 'reactflow';
-import { Moon, Sun, Play } from 'lucide-react';
+import { Moon, Sun, Play, Menu, Terminal } from 'lucide-react';
 import { FlowEditor } from './components/FlowEditor';
 import { Console } from './components/Console';
 import { PropertiesPanel } from './components/PropertiesPanel';
@@ -14,6 +15,10 @@ function App() {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
   const [isWaitingForInput, setIsWaitingForInput] = useState(false);
+  
+  // Mobile states
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isConsoleOpen, setIsConsoleOpen] = useState(false);
 
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -29,6 +34,8 @@ function App() {
     setLogs(['Starting execution...']);
     setHighlightedNodeId(null);
     setIsWaitingForInput(false);
+    // Open console on mobile when running
+    setIsConsoleOpen(true);
 
     // Executor signature: nodes, edges, logCallback, requestInput, setHighlight
     executorRef.current = new Executor(
@@ -37,6 +44,7 @@ function App() {
       (log) => setLogs(prev => [...prev, log]),
       async (msg) => {
         setIsWaitingForInput(true);
+        setIsConsoleOpen(true); // Ensure console is open for input
         // We need to wait for input. Console component handles the UI.
         // We return a promise that resolves when input is provided.
         // The Console component doesn't have a direct "requestInput" method exposed via ref in the previous code?
@@ -60,7 +68,7 @@ function App() {
       await executorRef.current.execute();
       setLogs(prev => [...prev, 'Execution finished.']);
     } catch (error: any) {
-      setLogs(prev => [...prev, `Error: ${error.message}`]);
+      setLogs(prev => [...prev, `Error: ${ error.message } `]);
     } finally {
       setHighlightedNodeId(null);
       setIsWaitingForInput(false);
@@ -80,6 +88,11 @@ function App() {
 
   const onPaneClick = () => {
     setSelectedNodeId(null);
+    // Close mobile panels when clicking on the canvas
+    if (window.innerWidth <= 768) {
+      setIsSidebarOpen(false);
+      setIsConsoleOpen(false);
+    }
   };
 
   const toggleTheme = () => {
@@ -128,29 +141,26 @@ function App() {
   return (
     <div className="app-container" data-theme={theme}>
       <div className="main-content">
-        <Sidebar />
+        <div className={`sidebar - wrapper ${ isSidebarOpen ? 'open' : '' } `}>
+          <Sidebar />
+        </div>
+        
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative' }}>
-          <div style={{
-            position: 'absolute',
-            top: '20px',
-            right: '20px',
-            zIndex: 10,
-            display: 'flex',
-            gap: '10px'
-          }}>
+          <div className="top-controls">
+            {/* Mobile Menu Toggle */}
+            <button 
+              className="btn btn-icon mobile-only" 
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              title="Toggle Menu"
+            >
+              <Menu size={20} />
+            </button>
+
             <select
               onChange={(e) => {
                 if (e.target.value) loadExample(e.target.value);
               }}
-              style={{
-                padding: '8px 12px',
-                borderRadius: '8px',
-                border: '1px solid var(--glass-border)',
-                background: 'var(--glass-bg)',
-                color: 'var(--text-color)',
-                cursor: 'pointer',
-                outline: 'none'
-              }}
+              className="example-select"
               defaultValue=""
             >
               <option value="" disabled>Load Example...</option>
@@ -159,18 +169,28 @@ function App() {
             </select>
 
             <button className="btn btn-primary" onClick={handleRun} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Play size={16} /> Run Flow
+              <Play size={16} /> <span className="desktop-only">Run Flow</span>
+            </button>
+
+            {/* Mobile Console Toggle */}
+            <button 
+              className={`btn btn - icon mobile - only ${ isConsoleOpen ? 'active' : '' } `}
+              onClick={() => setIsConsoleOpen(!isConsoleOpen)}
+              title="Toggle Console"
+              style={{ color: isConsoleOpen ? 'var(--primary-color)' : 'inherit' }}
+            >
+              <Terminal size={20} />
             </button>
 
             <button
               onClick={toggleTheme}
-              className="btn"
-              style={{ padding: '8px', borderRadius: '50%', minWidth: 'auto' }}
+              className="btn btn-icon"
               title="Toggle Theme"
             >
               {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
             </button>
           </div>
+          
           <FlowEditor
             nodes={nodes}
             edges={edges}
@@ -183,12 +203,15 @@ function App() {
             onPaneClick={onPaneClick}
             theme={theme}
           />
-          <Console
-            ref={consoleRef}
-            logs={logs}
-            onInput={handleInput}
-            isWaitingForInput={isWaitingForInput}
-          />
+          
+          <div className={`console - container ${ isConsoleOpen ? 'open' : '' } `}>
+            <Console
+              ref={consoleRef}
+              logs={logs}
+              onInput={handleInput}
+              isWaitingForInput={isWaitingForInput}
+            />
+          </div>
         </div>
       </div>
       {selectedNode && (

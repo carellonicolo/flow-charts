@@ -42,16 +42,7 @@ export const Console = forwardRef<ConsoleRef, ConsoleProps>(({ logs, onInput, is
     };
 
     return (
-        <div className="glass-panel" style={{
-            position: 'absolute',
-            bottom: '20px',
-            right: '20px',
-            width: '400px',
-            height: '300px',
-            display: 'flex',
-            flexDirection: 'column',
-            zIndex: 10
-        }}>
+        <div className="glass-panel console-wrapper">
             <div style={{
                 padding: '10px',
                 borderBottom: '1px solid var(--glass-border)',
