@@ -1,4 +1,3 @@
-```javascript
 import React, { useState, useRef, useEffect } from 'react';
 import { useNodesState, useEdgesState } from 'reactflow';
 import { Moon, Sun, Play, Menu, Terminal } from 'lucide-react';
@@ -68,7 +67,7 @@ function App() {
       await executorRef.current.execute();
       setLogs(prev => [...prev, 'Execution finished.']);
     } catch (error: any) {
-      setLogs(prev => [...prev, `Error: ${ error.message } `]);
+      setLogs(prev => [...prev, `Error: ${error.message}`]);
     } finally {
       setHighlightedNodeId(null);
       setIsWaitingForInput(false);
@@ -141,7 +140,7 @@ function App() {
   return (
     <div className="app-container" data-theme={theme}>
       <div className="main-content">
-        <div className={`sidebar - wrapper ${ isSidebarOpen ? 'open' : '' } `}>
+        <div className={`sidebar-wrapper ${isSidebarOpen ? 'open' : ''}`}>
           <Sidebar />
         </div>
         
@@ -173,8 +172,8 @@ function App() {
             </button>
 
             {/* Mobile Console Toggle */}
-            <button 
-              className={`btn btn - icon mobile - only ${ isConsoleOpen ? 'active' : '' } `}
+            <button
+              className={`btn btn-icon mobile-only ${isConsoleOpen ? 'active' : ''}`}
               onClick={() => setIsConsoleOpen(!isConsoleOpen)}
               title="Toggle Console"
               style={{ color: isConsoleOpen ? 'var(--primary-color)' : 'inherit' }}
@@ -204,7 +203,7 @@ function App() {
             theme={theme}
           />
           
-          <div className={`console - container ${ isConsoleOpen ? 'open' : '' } `}>
+          <div className={`console-container ${isConsoleOpen ? 'open' : ''}`}>
             <Console
               ref={consoleRef}
               logs={logs}

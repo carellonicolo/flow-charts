@@ -1,14 +1,24 @@
 import { X } from 'lucide-react';
 
+export interface HelpContent {
+    description: string;
+    usage: string;
+    example: string;
+    image?: string;
+}
+
 interface HelpModalProps {
     isOpen: boolean;
     onClose: () => void;
     title: string;
-    content: string;
+    content: HelpContent | string;
 }
 
 export const HelpModal = ({ isOpen, onClose, title, content }: HelpModalProps) => {
     if (!isOpen) return null;
+
+    const isRichContent = typeof content === 'object';
+    const helpContent = isRichContent ? content : { description: content, usage: '', example: '' };
 
     return (
         <div style={{
@@ -22,18 +32,22 @@ export const HelpModal = ({ isOpen, onClose, title, content }: HelpModalProps) =
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            zIndex: 1000
+            zIndex: 1000,
+            padding: '20px'
         }} onClick={onClose}>
             <div
                 className="glass-panel"
                 style={{
-                    width: '400px',
+                    width: '100%',
+                    maxWidth: '600px',
+                    maxHeight: '80vh',
                     padding: '24px',
                     borderRadius: '16px',
                     background: 'var(--glass-bg)',
                     border: '1px solid var(--glass-border)',
                     boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
-                    position: 'relative'
+                    position: 'relative',
+                    overflowY: 'auto'
                 }}
                 onClick={(e) => e.stopPropagation()}
             >
@@ -61,7 +75,7 @@ export const HelpModal = ({ isOpen, onClose, title, content }: HelpModalProps) =
                 </button>
 
                 <h3 style={{
-                    margin: '0 0 16px 0',
+                    margin: '0 0 20px 0',
                     fontSize: '1.5rem',
                     background: 'linear-gradient(to right, #6366f1, #a855f7)',
                     WebkitBackgroundClip: 'text',
@@ -70,14 +84,91 @@ export const HelpModal = ({ isOpen, onClose, title, content }: HelpModalProps) =
                     {title}
                 </h3>
 
-                <p style={{
-                    margin: 0,
-                    lineHeight: '1.6',
-                    color: 'var(--text-color)',
-                    fontSize: '1rem'
-                }}>
-                    {content}
-                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <div>
+                        <h4 style={{
+                            margin: '0 0 8px 0',
+                            color: 'var(--primary-color)',
+                            fontSize: '1.1rem'
+                        }}>
+                            Descrizione
+                        </h4>
+                        <p style={{
+                            margin: 0,
+                            lineHeight: '1.6',
+                            color: 'var(--text-color)',
+                            fontSize: '1rem'
+                        }}>
+                            {helpContent.description}
+                        </p>
+                    </div>
+
+                    {helpContent.usage && (
+                        <div>
+                            <h4 style={{
+                                margin: '0 0 8px 0',
+                                color: 'var(--primary-color)',
+                                fontSize: '1.1rem'
+                            }}>
+                                Come usarlo
+                            </h4>
+                            <p style={{
+                                margin: 0,
+                                lineHeight: '1.6',
+                                color: 'var(--text-color)',
+                                fontSize: '1rem'
+                            }}>
+                                {helpContent.usage}
+                            </p>
+                        </div>
+                    )}
+
+                    {helpContent.example && (
+                        <div>
+                            <h4 style={{
+                                margin: '0 0 8px 0',
+                                color: 'var(--primary-color)',
+                                fontSize: '1.1rem'
+                            }}>
+                                Esempio
+                            </h4>
+                            <pre style={{
+                                margin: 0,
+                                padding: '12px',
+                                background: 'rgba(0, 0, 0, 0.2)',
+                                borderRadius: '8px',
+                                color: 'var(--text-color)',
+                                fontSize: '0.9rem',
+                                lineHeight: '1.5',
+                                overflow: 'auto',
+                                border: '1px solid var(--glass-border)'
+                            }}>
+                                {helpContent.example}
+                            </pre>
+                        </div>
+                    )}
+
+                    {isRichContent && helpContent.image && (
+                        <div>
+                            <h4 style={{
+                                margin: '0 0 8px 0',
+                                color: 'var(--primary-color)',
+                                fontSize: '1.1rem'
+                            }}>
+                                Esempio visivo
+                            </h4>
+                            <img
+                                src={helpContent.image}
+                                alt="Esempio"
+                                style={{
+                                    width: '100%',
+                                    borderRadius: '8px',
+                                    border: '1px solid var(--glass-border)'
+                                }}
+                            />
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );

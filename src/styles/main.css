@@ -190,6 +190,27 @@ body {
   transition: all 0.3s ease;
 }
 
+/* Drag and Drop Optimizations */
+.dndnode {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-font-smoothing: subpixel-antialiased;
+}
+
+.dndnode:active {
+  cursor: grabbing !important;
+}
+
+/* React Flow Node Dragging Optimization */
+.react-flow__node {
+  will-change: transform;
+}
+
+.react-flow__node.dragging {
+  opacity: 0.6;
+}
+
 /* Responsive Media Queries */
 @media (max-height: 800px) {
   .sidebar-container {

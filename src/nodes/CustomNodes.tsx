@@ -111,7 +111,7 @@ export const DecisionNode = ({ data }: NodeProps) => {
 
 export const InputNode = ({ data }: NodeProps) => {
     return (
-        <div className="glass-panel" style={{
+        <div style={{
             padding: '16px',
             background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
             borderRadius: '8px',
@@ -119,9 +119,14 @@ export const InputNode = ({ data }: NodeProps) => {
             transform: 'skew(-10deg)',
             textAlign: 'center',
             boxShadow: '0 4px 15px rgba(139, 92, 246, 0.4)',
-            border: '1px solid rgba(255,255,255,0.2)'
+            border: '1px solid rgba(255,255,255,0.2)',
+            overflow: 'hidden',
+            isolation: 'isolate'
         }}>
-            <div style={{ transform: 'skew(10deg)' }}>
+            <div style={{
+                transform: 'skew(10deg)',
+                background: 'transparent'
+            }}>
                 <Handle type="target" position={Position.Top} style={handleStyle} />
                 <div style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', opacity: 0.9 }}>
                     <Save size={14} color="white" />
@@ -136,7 +141,7 @@ export const InputNode = ({ data }: NodeProps) => {
 
 export const OutputNode = ({ data }: NodeProps) => {
     return (
-        <div className="glass-panel" style={{
+        <div style={{
             padding: '16px',
             background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
             borderRadius: '8px',
@@ -144,9 +149,14 @@ export const OutputNode = ({ data }: NodeProps) => {
             transform: 'skew(-10deg)',
             textAlign: 'center',
             boxShadow: '0 4px 15px rgba(139, 92, 246, 0.4)',
-            border: '1px solid rgba(255,255,255,0.2)'
+            border: '1px solid rgba(255,255,255,0.2)',
+            overflow: 'hidden',
+            isolation: 'isolate'
         }}>
-            <div style={{ transform: 'skew(10deg)' }}>
+            <div style={{
+                transform: 'skew(10deg)',
+                background: 'transparent'
+            }}>
                 <Handle type="target" position={Position.Top} style={handleStyle} />
                 <div style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', opacity: 0.9 }}>
                     <LogOut size={14} color="white" />

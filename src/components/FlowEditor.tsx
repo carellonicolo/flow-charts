@@ -114,6 +114,7 @@ const FlowEditorContent = ({
                     onPaneClick={onPaneClick}
                     nodeTypes={nodeTypes}
                     defaultEdgeOptions={{ type: 'smoothstep', animated: true, style: { stroke: '#6366f1', strokeWidth: 2 } }}
+                    proOptions={{ hideAttribution: true }}
                     fitView
                 >
                     <Controls />
