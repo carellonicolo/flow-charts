@@ -182,12 +182,10 @@ body {
   position: absolute;
   bottom: 20px;
   right: 20px;
-  width: 400px;
-  height: 300px;
+  /* width e height: gestiti da React state per permettere resize */
   display: flex;
   flex-direction: column;
   z-index: 10;
-  transition: all 0.3s ease;
 }
 
 /* Drag and Drop Optimizations */
@@ -202,13 +200,93 @@ body {
   cursor: grabbing !important;
 }
 
-/* React Flow Node Dragging Optimization */
+/* React Flow Node Dragging Optimization - Performance Focus */
 .react-flow__node {
   will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .react-flow__node.dragging {
-  opacity: 0.6;
+  opacity: 0.8;
+  cursor: grabbing !important;
+}
+
+/* Disable pointer events on children during drag for better performance */
+.react-flow__node.dragging * {
+  pointer-events: none !important;
+}
+
+/* Optimize transform performance */
+.react-flow__nodes {
+  transform: translateZ(0);
+}
+
+.react-flow__renderer {
+  transform: translateZ(0);
+}
+
+/* CRITICAL FIX: Remove white background from Input/Output node wrappers */
+.react-flow__node.react-flow__node-input,
+.react-flow__node.react-flow__node-output {
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+.react-flow__node-input .react-flow__node-default,
+.react-flow__node-output .react-flow__node-default {
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+/* Comment Node Textarea - Fix resize handle position */
+.comment-node {
+  overflow: visible !important;
+}
+
+.comment-textarea {
+  overflow: auto;
+}
+
+/* Style the resize handle for textarea */
+.comment-textarea::-webkit-resizer {
+  background-image: linear-gradient(135deg,
+    transparent 0%,
+    transparent 50%,
+    #f59e0b 50%,
+    #f59e0b 55%,
+    transparent 55%,
+    transparent 60%,
+    #f59e0b 60%,
+    #f59e0b 65%,
+    transparent 65%,
+    transparent 70%,
+    #f59e0b 70%,
+    #f59e0b 75%,
+    transparent 75%
+  );
+  background-size: 10px 10px;
+  background-position: bottom right;
+  background-repeat: no-repeat;
+}
+
+.comment-textarea::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.comment-textarea::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 3px;
+}
+
+.comment-textarea::-webkit-scrollbar-thumb {
+  background: #f59e0b;
+  border-radius: 3px;
+}
+
+.comment-textarea::-webkit-scrollbar-thumb:hover {
+  background: #d97706;
 }
 
 /* Responsive Media Queries */
@@ -328,4 +406,72 @@ body {
     max-width: 120px;
     font-size: 0.8rem;
   }
+}
+
+/* Toast Notification */
+.toast-container {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 1000;
+    animation: slideInRight 0.3s ease-out;
+}
+
+.toast {
+    padding: 12px 16px;
+    min-width: 300px;
+    max-width: 400px;
+    display: flex;
+    align-items: center;
+    background: var(--glass-bg);
+    border-left: 4px solid #ef4444;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@media (max-width: 768px) {
+    .toast-container {
+        top: 60px;
+        right: 10px;
+        left: 10px;
+    }
+
+    .toast {
+        min-width: auto;
+    }
+}
+
+/* Edge Context Menu */
+.context-menu-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  border-radius: 6px;
+  color: var(--text-color);
+  font-size: 0.9rem;
+  transition: background 0.2s;
+  text-align: left;
+  width: 100%;
+}
+
+.context-menu-btn:hover {
+  background: rgba(99, 102, 241, 0.2);
+}
+
+.context-menu-btn svg {
+  flex-shrink: 0;
 }

@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 import { Play, Square, ArrowRight, Save, LogOut, Diamond, Github, Mail, HelpCircle, MessageSquare } from 'lucide-react';
-import { HelpModal } from './HelpModal';
 
-interface HelpContent {
+export interface HelpContent {
     description: string;
     usage: string;
     example: string;
@@ -16,24 +15,39 @@ const SidebarItem = ({ type, label, description, icon: Icon, color, helpContent,
         event.dataTransfer.setData('application/reactflow/label', nodeLabel);
         event.dataTransfer.effectAllowed = 'move';
 
-        // Fix white background for input/output nodes during drag
+        // Create better drag preview for input/output nodes
         if (nodeType === 'input' || nodeType === 'output') {
-            // Create a transparent canvas as drag image
-            const canvas = document.createElement('canvas');
-            canvas.width = 160;
-            canvas.height = 80;
-            const ctx = canvas.getContext('2d');
-            if (ctx) {
-                // Draw the node content without white background
-                ctx.fillStyle = '#8b5cf6';
-                ctx.beginPath();
-                // Draw a simple rectangle (skew is visual only, not in drag image)
-                ctx.roundRect(10, 10, 140, 60, 8);
-                ctx.fill();
+            // Create a DOM element as drag preview
+            const dragPreview = document.createElement('div');
+            dragPreview.style.cssText = `
+                position: absolute;
+                top: -1000px;
+                left: -1000px;
+                padding: 16px;
+                background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+                border-radius: 8px;
+                min-width: 160px;
+                text-align: center;
+                box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+                border: 1px solid rgba(255,255,255,0.2);
+                color: white;
+                font-weight: bold;
+                font-size: 1.1rem;
+                transform: skew(-10deg);
+                pointer-events: none;
+            `;
+            dragPreview.innerHTML = `<div style="transform: skew(10deg)">${nodeLabel}</div>`;
+            document.body.appendChild(dragPreview);
 
-                // Set as drag image
-                event.dataTransfer.setDragImage(canvas, 80, 40);
-            }
+            // Set it as drag image
+            event.dataTransfer.setDragImage(dragPreview, 80, 40);
+
+            // Remove after drag starts
+            setTimeout(() => {
+                if (document.body.contains(dragPreview)) {
+                    document.body.removeChild(dragPreview);
+                }
+            }, 0);
         }
     };
 
@@ -89,15 +103,16 @@ const SidebarItem = ({ type, label, description, icon: Icon, color, helpContent,
     );
 };
 
-export const Sidebar = () => {
-    const [modalOpen, setModalOpen] = useState(false);
-    const [modalTitle, setModalTitle] = useState('');
-    const [modalContent, setModalContent] = useState<HelpContent | string>('');
+interface SidebarProps {
+    onOpenHelp: (title: string, content: HelpContent | string) => void;
+}
 
+export const Sidebar = ({ onOpenHelp }: SidebarProps) => {
     const openHelp = (title: string, content: HelpContent | string) => {
-        setModalTitle(title);
-        setModalContent(content);
-        setModalOpen(true);
+        console.log('🔍 openHelp chiamato:', title);
+        console.log('📄 Contenuto:', content);
+        onOpenHelp(title, content);
+        console.log('✅ openHelp callback eseguita');
     };
 
     return (
@@ -234,13 +249,6 @@ export const Sidebar = () => {
                     <a href="mailto:info@nicolocarello.it" style={{ color: 'inherit', textDecoration: 'none' }}>info@nicolocarello.it</a>
                 </div>
             </div>
-
-            <HelpModal
-                isOpen={modalOpen}
-                onClose={() => setModalOpen(false)}
-                title={modalTitle}
-                content={modalContent}
-            />
         </aside>
     );
 };

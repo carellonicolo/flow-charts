@@ -27,6 +27,11 @@ export class Executor {
         this.setHighlight = setHighlight;
     }
 
+    stop() {
+        this.isRunning = false;
+        this.setHighlight(null);
+    }
+
     async execute() {
         this.isRunning = true;
         this.variables = {};

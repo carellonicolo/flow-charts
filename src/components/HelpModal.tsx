@@ -15,8 +15,14 @@ interface HelpModalProps {
 }
 
 export const HelpModal = ({ isOpen, onClose, title, content }: HelpModalProps) => {
-    if (!isOpen) return null;
+    console.log('🎭 HelpModal render - isOpen:', isOpen, 'title:', title);
 
+    if (!isOpen) {
+        console.log('❌ Modal chiuso, return null');
+        return null;
+    }
+
+    console.log('✅ Modal aperto, rendering in corso...');
     const isRichContent = typeof content === 'object';
     const helpContent = isRichContent ? content : { description: content, usage: '', example: '' };
 

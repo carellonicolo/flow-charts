@@ -1,11 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNodesState, useEdgesState } from 'reactflow';
-import { Moon, Sun, Play, Menu, Terminal } from 'lucide-react';
+import { Moon, Sun, Play, Menu, Terminal, Square } from 'lucide-react';
 import { FlowEditor } from './components/FlowEditor';
 import { Console } from './components/Console';
 import { PropertiesPanel } from './components/PropertiesPanel';
-import { Sidebar } from './components/Sidebar';
+import { Sidebar, type HelpContent } from './components/Sidebar';
+import { HelpModal } from './components/HelpModal';
+import { Toast } from './components/Toast';
 import { Executor } from './engine/Executor';
+import { validateFlowSyntax, formatValidationMessage } from './utils/flowValidation';
 import './styles/main.css';
 
 function App() {
@@ -14,7 +17,14 @@ function App() {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
   const [isWaitingForInput, setIsWaitingForInput] = useState(false);
-  
+  const [isExecuting, setIsExecuting] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
+
+  // Help Modal states
+  const [helpModalOpen, setHelpModalOpen] = useState(false);
+  const [helpModalTitle, setHelpModalTitle] = useState('');
+  const [helpModalContent, setHelpModalContent] = useState<HelpContent | string>('');
+
   // Mobile states
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isConsoleOpen, setIsConsoleOpen] = useState(false);
@@ -29,10 +39,47 @@ function App() {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
-  const handleRun = async () => {
-    setLogs(['Starting execution...']);
+  const handleStop = () => {
+    if (executorRef.current) {
+      executorRef.current.stop();
+      setLogs(prev => [...prev, '⏹️ Esecuzione interrotta dall\'utente']);
+    }
+    setIsExecuting(false);
     setHighlightedNodeId(null);
     setIsWaitingForInput(false);
+  };
+
+  const handleRun = async () => {
+    // Se già in esecuzione, ferma
+    if (isExecuting) {
+      handleStop();
+      return;
+    }
+
+    // Valida il flowchart prima di eseguire
+    const validation = validateFlowSyntax(nodes, edges);
+
+    if (!validation.valid) {
+      // Mostra errori di validazione
+      const errorMessage = formatValidationMessage(validation);
+      setValidationError(errorMessage);
+      setLogs([errorMessage]);
+      setIsConsoleOpen(true); // Mostra console con errori
+      return;
+    }
+
+    // Se ci sono warning, mostrali nella console ma continua
+    if (validation.warnings.length > 0) {
+      const warningMessage = formatValidationMessage(validation);
+      setLogs([warningMessage, '', 'Starting execution...']);
+    } else {
+      setLogs(['✅ Validazione superata!', 'Starting execution...']);
+    }
+
+    setIsExecuting(true);
+    setHighlightedNodeId(null);
+    setIsWaitingForInput(false);
+    setValidationError(null);
     // Open console on mobile when running
     setIsConsoleOpen(true);
 
@@ -44,12 +91,6 @@ function App() {
       async (msg) => {
         setIsWaitingForInput(true);
         setIsConsoleOpen(true); // Ensure console is open for input
-        // We need to wait for input. Console component handles the UI.
-        // We return a promise that resolves when input is provided.
-        // The Console component doesn't have a direct "requestInput" method exposed via ref in the previous code?
-        // Let's check Console.tsx content from previous steps or assume we need to implement it.
-        // Actually, in step 393 I tried to use consoleRef.current.requestInput.
-        // If Console is forwardRef, we can expose methods.
         return new Promise<string>((resolve) => {
           if (consoleRef.current) {
             consoleRef.current.requestInput(resolve);
@@ -65,10 +106,11 @@ function App() {
 
     try {
       await executorRef.current.execute();
-      setLogs(prev => [...prev, 'Execution finished.']);
+      setLogs(prev => [...prev, '✅ Execution finished.']);
     } catch (error: any) {
-      setLogs(prev => [...prev, `Error: ${error.message}`]);
+      setLogs(prev => [...prev, `❌ Error: ${error.message}`]);
     } finally {
+      setIsExecuting(false);
       setHighlightedNodeId(null);
       setIsWaitingForInput(false);
     }
@@ -98,15 +140,43 @@ function App() {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
 
+  const handleOpenHelp = (title: string, content: HelpContent | string) => {
+    console.log('📖 App.handleOpenHelp chiamato:', title);
+    setHelpModalTitle(title);
+    setHelpModalContent(content);
+    setHelpModalOpen(true);
+    console.log('✅ Help modal state aggiornato');
+  };
+
+  // Helper function per migrare edges esistenti a smart edges
+  const migrateEdgesToSmartEdges = (edges: any[]): any[] => {
+    return edges.map((edge) => {
+      if (edge.type === 'smoothstep' || !edge.type) {
+        return {
+          ...edge,
+          type: 'smart',
+          data: {
+            ...edge.data,
+            routingMode: 'auto',
+            nodePadding: 20,
+            waypoints: [],
+          },
+        };
+      }
+      return edge;
+    });
+  };
+
   const loadExample = (exampleName: string) => {
     let newNodes: any[] = [];
     let newEdges: any[] = [];
 
     if (exampleName === 'hello') {
       newNodes = [
-        { id: '1', type: 'start', position: { x: 250, y: 50 }, data: { label: 'Start' } },
-        { id: '2', type: 'output', position: { x: 250, y: 200 }, data: { label: 'Hello World', expression: '"Hello World"' } },
-        { id: '3', type: 'end', position: { x: 250, y: 350 }, data: { label: 'End' } },
+        { id: 'c1', type: 'comment', position: { x: 50, y: 50 }, data: { label: 'SCOPO:\nPrimo programma introduttivo.\nMostra output di testo.\n\nSCELTE:\n- Output diretto\n- Testo tra virgolette\n- Flusso lineare' } },
+        { id: '1', type: 'start', position: { x: 300, y: 50 }, data: { label: 'Start' } },
+        { id: '2', type: 'output', position: { x: 300, y: 200 }, data: { label: 'Hello World', expression: '"Hello World"' } },
+        { id: '3', type: 'end', position: { x: 300, y: 350 }, data: { label: 'End' } },
       ];
       newEdges = [
         { id: 'e1-2', source: '1', target: '2', type: 'smoothstep', animated: true },
@@ -114,25 +184,118 @@ function App() {
       ];
     } else if (exampleName === 'counter') {
       newNodes = [
-        { id: '1', type: 'start', position: { x: 250, y: 20 }, data: { label: 'Start' } },
-        { id: '2', type: 'process', position: { x: 250, y: 120 }, data: { label: 'i = 1', variableName: 'i', expression: '1' } },
-        { id: '3', type: 'decision', position: { x: 250, y: 220 }, data: { label: 'i <= 5', condition: 'i <= 5' } },
-        { id: '4', type: 'output', position: { x: 250, y: 350 }, data: { label: 'Print i', expression: 'i' } },
-        { id: '5', type: 'process', position: { x: 250, y: 450 }, data: { label: 'i = i + 1', variableName: 'i', expression: 'i + 1' } },
-        { id: '6', type: 'end', position: { x: 500, y: 220 }, data: { label: 'End' } },
+        { id: 'c1', type: 'comment', position: { x: 50, y: 20 }, data: { label: 'SCOPO:\nCiclo iterativo 1-5.\n\nSCELTE:\n- Contatore i=1\n- Condizione i<=5\n- Incremento i+1\n- False esce' } },
+        { id: '1', type: 'start', position: { x: 300, y: 20 }, data: { label: 'Start' } },
+        { id: '2', type: 'process', position: { x: 300, y: 120 }, data: { label: 'i = 1', variableName: 'i', expression: '1' } },
+        { id: '3', type: 'decision', position: { x: 300, y: 240 }, data: { label: 'i <= 5', condition: 'i <= 5' } },
+        { id: '4', type: 'output', position: { x: 300, y: 420 }, data: { label: 'Print i', expression: 'i' } },
+        { id: '5', type: 'process', position: { x: 300, y: 550 }, data: { label: 'i = i + 1', variableName: 'i', expression: 'i + 1' } },
+        { id: '6', type: 'end', position: { x: 580, y: 240 }, data: { label: 'End' } },
       ];
       newEdges = [
         { id: 'e1-2', source: '1', target: '2', type: 'smoothstep', animated: true },
         { id: 'e2-3', source: '2', target: '3', type: 'smoothstep', animated: true },
-        { id: 'e3-4', source: '3', target: '4', sourceHandle: 'true', type: 'smoothstep', animated: true, label: 'True' },
+        { id: 'e3-4', source: '3', target: '4', sourceHandle: 'true', type: 'smoothstep', animated: true },
         { id: 'e4-5', source: '4', target: '5', type: 'smoothstep', animated: true },
         { id: 'e5-3', source: '5', target: '3', type: 'smoothstep', animated: true },
-        { id: 'e3-6', source: '3', target: '6', sourceHandle: 'false', type: 'smoothstep', animated: true, label: 'False' },
+        { id: 'e3-6', source: '3', target: '6', sourceHandle: 'false', type: 'smoothstep', animated: true },
+      ];
+    } else if (exampleName === 'sum') {
+      newNodes = [
+        { id: 'c1', type: 'comment', position: { x: 50, y: 80 }, data: { label: 'SCOPO:\nSomma due numeri.\n\nSCELTE:\n- Input a e b separati\n- Process per somma\n- Output risultato' } },
+        { id: '1', type: 'start', position: { x: 300, y: 50 }, data: { label: 'Start' } },
+        { id: '2', type: 'input', position: { x: 300, y: 170 }, data: { label: 'Numero a', variableName: 'a' } },
+        { id: '3', type: 'input', position: { x: 300, y: 300 }, data: { label: 'Numero b', variableName: 'b' } },
+        { id: '4', type: 'process', position: { x: 300, y: 430 }, data: { label: 'somma = a + b', variableName: 'somma', expression: 'a + b' } },
+        { id: '5', type: 'output', position: { x: 300, y: 560 }, data: { label: 'somma', expression: 'somma' } },
+        { id: '6', type: 'end', position: { x: 300, y: 690 }, data: { label: 'End' } },
+      ];
+      newEdges = [
+        { id: 'e1-2', source: '1', target: '2', type: 'smoothstep', animated: true },
+        { id: 'e2-3', source: '2', target: '3', type: 'smoothstep', animated: true },
+        { id: 'e3-4', source: '3', target: '4', type: 'smoothstep', animated: true },
+        { id: 'e4-5', source: '4', target: '5', type: 'smoothstep', animated: true },
+        { id: 'e5-6', source: '5', target: '6', type: 'smoothstep', animated: true },
+      ];
+    } else if (exampleName === 'evenodd') {
+      newNodes = [
+        { id: 'c1', type: 'comment', position: { x: 50, y: 80 }, data: { label: 'SCOPO:\nPari o dispari.\n\nSCELTE:\n- Modulo n%2\n- Decision resto==0\n- Output diversi' } },
+        { id: '1', type: 'start', position: { x: 300, y: 50 }, data: { label: 'Start' } },
+        { id: '2', type: 'input', position: { x: 300, y: 170 }, data: { label: 'Numero n', variableName: 'n' } },
+        { id: '3', type: 'process', position: { x: 300, y: 290 }, data: { label: 'resto = n % 2', variableName: 'resto', expression: 'n % 2' } },
+        { id: '4', type: 'decision', position: { x: 300, y: 420 }, data: { label: 'resto == 0', condition: 'resto == 0' } },
+        { id: '5', type: 'output', position: { x: 300, y: 600 }, data: { label: 'Pari', expression: '"Pari"' } },
+        { id: '6', type: 'output', position: { x: 580, y: 420 }, data: { label: 'Dispari', expression: '"Dispari"' } },
+        { id: '7', type: 'end', position: { x: 300, y: 730 }, data: { label: 'End' } },
+        { id: '8', type: 'end', position: { x: 580, y: 570 }, data: { label: 'End' } },
+      ];
+      newEdges = [
+        { id: 'e1-2', source: '1', target: '2', type: 'smoothstep', animated: true },
+        { id: 'e2-3', source: '2', target: '3', type: 'smoothstep', animated: true },
+        { id: 'e3-4', source: '3', target: '4', type: 'smoothstep', animated: true },
+        { id: 'e4-5', source: '4', target: '5', sourceHandle: 'true', type: 'smoothstep', animated: true },
+        { id: 'e4-6', source: '4', target: '6', sourceHandle: 'false', type: 'smoothstep', animated: true },
+        { id: 'e5-7', source: '5', target: '7', type: 'smoothstep', animated: true },
+        { id: 'e6-8', source: '6', target: '8', type: 'smoothstep', animated: true },
+      ];
+    } else if (exampleName === 'max3') {
+      newNodes = [
+        { id: 'c1', type: 'comment', position: { x: 850, y: 50 }, data: { label: 'SCOPO:\nMassimo tra 3.\n\nSCELTE:\n- Decision annidati\n- Confronto a vs b\n- Vincente vs c' } },
+        { id: '1', type: 'start', position: { x: 450, y: 50 }, data: { label: 'Start' } },
+        { id: '2', type: 'input', position: { x: 450, y: 170 }, data: { label: 'a', variableName: 'a' } },
+        { id: '3', type: 'input', position: { x: 450, y: 280 }, data: { label: 'b', variableName: 'b' } },
+        { id: '4', type: 'input', position: { x: 450, y: 390 }, data: { label: 'c', variableName: 'c' } },
+        { id: '5', type: 'decision', position: { x: 450, y: 510 }, data: { label: 'a > b', condition: 'a > b' } },
+        { id: '6', type: 'decision', position: { x: 250, y: 690 }, data: { label: 'a > c', condition: 'a > c' } },
+        { id: '7', type: 'decision', position: { x: 650, y: 690 }, data: { label: 'b > c', condition: 'b > c' } },
+        { id: '8', type: 'output', position: { x: 100, y: 870 }, data: { label: 'Max: a', expression: 'a' } },
+        { id: '9', type: 'output', position: { x: 400, y: 870 }, data: { label: 'Max: c', expression: 'c' } },
+        { id: '10', type: 'output', position: { x: 650, y: 870 }, data: { label: 'Max: b', expression: 'b' } },
+        { id: '11', type: 'output', position: { x: 900, y: 870 }, data: { label: 'Max: c', expression: 'c' } },
+        { id: '12', type: 'end', position: { x: 450, y: 1020 }, data: { label: 'End' } },
+      ];
+      newEdges = [
+        { id: 'e1-2', source: '1', target: '2', type: 'smoothstep', animated: true },
+        { id: 'e2-3', source: '2', target: '3', type: 'smoothstep', animated: true },
+        { id: 'e3-4', source: '3', target: '4', type: 'smoothstep', animated: true },
+        { id: 'e4-5', source: '4', target: '5', type: 'smoothstep', animated: true },
+        { id: 'e5-6', source: '5', target: '6', sourceHandle: 'true', type: 'smoothstep', animated: true },
+        { id: 'e5-7', source: '5', target: '7', sourceHandle: 'false', type: 'smoothstep', animated: true },
+        { id: 'e6-8', source: '6', target: '8', sourceHandle: 'true', type: 'smoothstep', animated: true },
+        { id: 'e6-9', source: '6', target: '9', sourceHandle: 'false', type: 'smoothstep', animated: true },
+        { id: 'e7-10', source: '7', target: '10', sourceHandle: 'true', type: 'smoothstep', animated: true },
+        { id: 'e7-11', source: '7', target: '11', sourceHandle: 'false', type: 'smoothstep', animated: true },
+        { id: 'e8-12', source: '8', target: '12', type: 'smoothstep', animated: true },
+        { id: 'e9-12', source: '9', target: '12', type: 'smoothstep', animated: true },
+        { id: 'e10-12', source: '10', target: '12', type: 'smoothstep', animated: true },
+        { id: 'e11-12', source: '11', target: '12', type: 'smoothstep', animated: true },
+      ];
+    } else if (exampleName === 'factorial') {
+      newNodes = [
+        { id: 'c1', type: 'comment', position: { x: 50, y: 80 }, data: { label: 'SCOPO:\nFattoriale n!\n\nSCELTE:\n- risultato=1\n- Loop n>1\n- Moltiplica*n\n- Decrementa n-1' } },
+        { id: '1', type: 'start', position: { x: 350, y: 50 }, data: { label: 'Start' } },
+        { id: '2', type: 'input', position: { x: 350, y: 170 }, data: { label: 'n', variableName: 'n' } },
+        { id: '3', type: 'process', position: { x: 350, y: 280 }, data: { label: 'risultato = 1', variableName: 'risultato', expression: '1' } },
+        { id: '4', type: 'decision', position: { x: 350, y: 410 }, data: { label: 'n > 1', condition: 'n > 1' } },
+        { id: '5', type: 'process', position: { x: 350, y: 590 }, data: { label: 'ris = ris * n', variableName: 'risultato', expression: 'risultato * n' } },
+        { id: '6', type: 'process', position: { x: 350, y: 710 }, data: { label: 'n = n - 1', variableName: 'n', expression: 'n - 1' } },
+        { id: '7', type: 'output', position: { x: 630, y: 410 }, data: { label: 'risultato', expression: 'risultato' } },
+        { id: '8', type: 'end', position: { x: 630, y: 560 }, data: { label: 'End' } },
+      ];
+      newEdges = [
+        { id: 'e1-2', source: '1', target: '2', type: 'smoothstep', animated: true },
+        { id: 'e2-3', source: '2', target: '3', type: 'smoothstep', animated: true },
+        { id: 'e3-4', source: '3', target: '4', type: 'smoothstep', animated: true },
+        { id: 'e4-5', source: '4', target: '5', sourceHandle: 'true', type: 'smoothstep', animated: true },
+        { id: 'e5-6', source: '5', target: '6', type: 'smoothstep', animated: true },
+        { id: 'e6-4', source: '6', target: '4', type: 'smoothstep', animated: true },
+        { id: 'e4-7', source: '4', target: '7', sourceHandle: 'false', type: 'smoothstep', animated: true },
+        { id: 'e7-8', source: '7', target: '8', type: 'smoothstep', animated: true },
       ];
     }
 
     setNodes(newNodes);
-    setEdges(newEdges);
+    setEdges(migrateEdgesToSmartEdges(newEdges));
   };
 
   const selectedNode = nodes.find(n => n.id === selectedNodeId) || null;
@@ -141,7 +304,7 @@ function App() {
     <div className="app-container" data-theme={theme}>
       <div className="main-content">
         <div className={`sidebar-wrapper ${isSidebarOpen ? 'open' : ''}`}>
-          <Sidebar />
+          <Sidebar onOpenHelp={handleOpenHelp} />
         </div>
         
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative' }}>
@@ -163,12 +326,28 @@ function App() {
               defaultValue=""
             >
               <option value="" disabled>Load Example...</option>
-              <option value="hello">Hello World</option>
-              <option value="counter">Loop 1 to 5</option>
+              <option value="hello">🌍 Hello World</option>
+              <option value="counter">🔁 Loop 1 to 5</option>
+              <option value="sum">➕ Somma due numeri</option>
+              <option value="evenodd">🔢 Pari o Dispari</option>
+              <option value="max3">📊 Massimo tra 3</option>
+              <option value="factorial">🧮 Fattoriale</option>
             </select>
 
-            <button className="btn btn-primary" onClick={handleRun} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Play size={16} /> <span className="desktop-only">Run Flow</span>
+            <button
+              className="btn btn-primary"
+              onClick={handleRun}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                background: isExecuting ? '#ef4444' : 'var(--primary-color)',
+                transition: 'background 0.3s ease'
+              }}
+              title={isExecuting ? 'Stop Execution' : 'Run Flow'}
+            >
+              {isExecuting ? <Square size={16} /> : <Play size={16} />}
+              <span className="desktop-only">{isExecuting ? 'Stop Flow' : 'Run Flow'}</span>
             </button>
 
             {/* Mobile Console Toggle */}
@@ -213,7 +392,7 @@ function App() {
           </div>
         </div>
       </div>
-      {selectedNode && (
+      {selectedNode && selectedNode.type !== 'comment' && (
         <PropertiesPanel
           selectedNode={selectedNode}
           onClose={() => setSelectedNodeId(null)}
@@ -228,6 +407,19 @@ function App() {
           }}
         />
       )}
+      {validationError && (
+        <Toast
+          message={validationError.split('\n')[0]}
+          onClose={() => setValidationError(null)}
+          duration={5000}
+        />
+      )}
+      <HelpModal
+        isOpen={helpModalOpen}
+        onClose={() => setHelpModalOpen(false)}
+        title={helpModalTitle}
+        content={helpModalContent}
+      />
     </div>
   );
 }
