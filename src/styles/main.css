@@ -200,11 +200,12 @@ body {
   cursor: grabbing !important;
 }
 
-/* React Flow Node Dragging Optimization - Performance Focus */
+/* React Flow Node - High Quality Rendering */
 .react-flow__node {
-  will-change: transform;
-  transform: translateZ(0);
-  backface-visibility: hidden;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .react-flow__node.dragging {
@@ -215,15 +216,6 @@ body {
 /* Disable pointer events on children during drag for better performance */
 .react-flow__node.dragging * {
   pointer-events: none !important;
-}
-
-/* Optimize transform performance */
-.react-flow__nodes {
-  transform: translateZ(0);
-}
-
-.react-flow__renderer {
-  transform: translateZ(0);
 }
 
 /* CRITICAL FIX: Remove white background from Input/Output node wrappers */

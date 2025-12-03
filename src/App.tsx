@@ -148,25 +148,6 @@ function App() {
     console.log('✅ Help modal state aggiornato');
   };
 
-  // Helper function per migrare edges esistenti a smart edges
-  const migrateEdgesToSmartEdges = (edges: any[]): any[] => {
-    return edges.map((edge) => {
-      if (edge.type === 'smoothstep' || !edge.type) {
-        return {
-          ...edge,
-          type: 'smart',
-          data: {
-            ...edge.data,
-            routingMode: 'auto',
-            nodePadding: 20,
-            waypoints: [],
-          },
-        };
-      }
-      return edge;
-    });
-  };
-
   const loadExample = (exampleName: string) => {
     let newNodes: any[] = [];
     let newEdges: any[] = [];
@@ -295,7 +276,7 @@ function App() {
     }
 
     setNodes(newNodes);
-    setEdges(migrateEdgesToSmartEdges(newEdges));
+    setEdges(newEdges);
   };
 
   const selectedNode = nodes.find(n => n.id === selectedNodeId) || null;

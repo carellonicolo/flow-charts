@@ -1,4 +1,4 @@
-import React, { useRef, useCallback } from 'react';
+import React, { useRef, useCallback, useMemo } from 'react';
 import ReactFlow, {
     ReactFlowProvider,
     addEdge,
@@ -12,14 +12,19 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 
 import { nodeTypes } from '../nodes';
-import { edgeTypes } from '../edges';
 import { validateConnection } from '../utils/edgeValidation';
-import { switchToManualMode, switchToAutoMode, resetEdgeWaypoints } from '../utils/edgeRouting';
 import { Toast } from './Toast';
-import { EdgeContextMenu } from './EdgeContextMenu';
 
 let id = 0;
 const getId = () => `dndnode_${id++}`;
+
+const defaultEdgeOptions = {
+    type: 'smoothstep',
+    animated: true,
+    style: { stroke: '#6366f1', strokeWidth: 2 }
+};
+
+const proOptions = { hideAttribution: true };
 
 interface FlowEditorProps {
     nodes: Node[];
@@ -49,11 +54,9 @@ const FlowEditorContent = ({
     const reactFlowWrapper = useRef<HTMLDivElement>(null);
     const [reactFlowInstance, setReactFlowInstance] = React.useState<any>(null);
     const [toastMessage, setToastMessage] = React.useState<string | null>(null);
-    const [contextMenu, setContextMenu] = React.useState<{
-        edge: Edge;
-        x: number;
-        y: number;
-    } | null>(null);
+
+    // Memoize nodeTypes to prevent React Flow warnings
+    const memoizedNodeTypes = useMemo(() => nodeTypes, []);
 
     const onConnect = useCallback(
         (params: Connection) => {
@@ -73,14 +76,7 @@ const FlowEditorContent = ({
                 return;
             }
 
-            // Connessione valida - aggiungi smart edge
-            const newEdge = {
-                ...params,
-                type: 'smart',
-                animated: true,
-                data: { routingMode: 'auto', nodePadding: 20, waypoints: [] }
-            };
-            setEdges((eds: Edge[]) => addEdge(newEdge, eds));
+            setEdges((eds: Edge[]) => addEdge({ ...params, type: 'smoothstep', animated: true }, eds));
         },
         [setEdges, edges, nodes],
     );
@@ -117,45 +113,6 @@ const FlowEditorContent = ({
         },
         [reactFlowInstance, setNodes],
     );
-
-    // Edge Context Menu handlers
-    const onEdgeContextMenu = useCallback(
-        (event: React.MouseEvent, edge: Edge) => {
-            event.preventDefault();
-            setContextMenu({ edge, x: event.clientX, y: event.clientY });
-        },
-        []
-    );
-
-    const handleSwitchToManual = useCallback(() => {
-        if (!contextMenu) return;
-        setEdges((eds) =>
-            eds.map((e) => e.id === contextMenu.edge.id ? switchToManualMode(e) : e)
-        );
-        setContextMenu(null);
-    }, [contextMenu, setEdges]);
-
-    const handleSwitchToAuto = useCallback(() => {
-        if (!contextMenu) return;
-        setEdges((eds) =>
-            eds.map((e) => e.id === contextMenu.edge.id ? switchToAutoMode(e) : e)
-        );
-        setContextMenu(null);
-    }, [contextMenu, setEdges]);
-
-    const handleResetWaypoints = useCallback(() => {
-        if (!contextMenu) return;
-        setEdges((eds) =>
-            eds.map((e) => e.id === contextMenu.edge.id ? resetEdgeWaypoints(e) : e)
-        );
-        setContextMenu(null);
-    }, [contextMenu, setEdges]);
-
-    const handleDeleteEdge = useCallback(() => {
-        if (!contextMenu) return;
-        setEdges((eds) => eds.filter((e) => e.id !== contextMenu.edge.id));
-        setContextMenu(null);
-    }, [contextMenu, setEdges]);
 
     // Function to update node data (for editable nodes like Comment)
     const handleNodeDataChange = useCallback((nodeId: string, newData: any) => {
@@ -237,16 +194,9 @@ const FlowEditorContent = ({
                     onDragOver={onDragOver}
                     onNodeClick={(event, node: Node) => onNodeClick?.(event, node)}
                     onPaneClick={onPaneClick}
-                    onEdgeContextMenu={onEdgeContextMenu}
-                    nodeTypes={nodeTypes}
-                    edgeTypes={edgeTypes}
-                    defaultEdgeOptions={{
-                        type: 'smart',
-                        animated: true,
-                        style: { stroke: '#6366f1', strokeWidth: 2 },
-                        data: { routingMode: 'auto', nodePadding: 20, waypoints: [] }
-                    }}
-                    proOptions={{ hideAttribution: true }}
+                    nodeTypes={memoizedNodeTypes}
+                    defaultEdgeOptions={defaultEdgeOptions}
+                    proOptions={proOptions}
                     panOnDrag={true}
                     panOnScroll={false}
                     zoomOnScroll={true}
@@ -260,18 +210,6 @@ const FlowEditorContent = ({
                     <Background color={bgOptions.color} gap={bgOptions.gap} size={bgOptions.size} />
                 </ReactFlow>
             </div>
-            {contextMenu && (
-                <EdgeContextMenu
-                    edge={contextMenu.edge}
-                    x={contextMenu.x}
-                    y={contextMenu.y}
-                    onClose={() => setContextMenu(null)}
-                    onSwitchToManual={handleSwitchToManual}
-                    onSwitchToAuto={handleSwitchToAuto}
-                    onResetWaypoints={handleResetWaypoints}
-                    onDelete={handleDeleteEdge}
-                />
-            )}
             {toastMessage && (
                 <Toast
                     message={toastMessage}

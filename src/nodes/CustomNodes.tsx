@@ -92,7 +92,7 @@ export const DecisionNode = ({ data }: NodeProps) => {
             width: `${containerSize}px`,
             height: `${containerSize}px`
         }}>
-            {/* Diamante ruotato - centrato nel container */}
+            {/* Diamante rotato - centrato nel container */}
             <div
                 className="glass-panel"
                 style={{
