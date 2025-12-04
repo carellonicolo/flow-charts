@@ -206,6 +206,19 @@ body {
   image-rendering: crisp-edges;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: geometricPrecision;
+}
+
+/* Force high quality rendering for all child elements */
+.react-flow__node * {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: geometricPrecision;
+}
+
+/* Ensure transforms maintain quality */
+.react-flow__viewport {
+  image-rendering: -webkit-optimize-contrast;
 }
 
 .react-flow__node.dragging {

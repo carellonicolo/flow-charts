@@ -206,6 +206,11 @@ const FlowEditorContent = ({
                     nodesDraggable={true}
                     elementsSelectable={true}
                     fitView
+                    fitViewOptions={{
+                        padding: 0.2,
+                        minZoom: 0.5,
+                        maxZoom: 1.5
+                    }}
                 >
                     <Background color={bgOptions.color} gap={bgOptions.gap} size={bgOptions.size} />
                 </ReactFlow>
