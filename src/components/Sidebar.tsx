@@ -1,6 +1,7 @@
 import React from 'react';
 
-import { Play, Square, ArrowRight, Save, LogOut, Diamond, Github, Mail, HelpCircle, MessageSquare } from 'lucide-react';
+import { Play, Square, ArrowRight, Save, LogOut, Diamond, HelpCircle, MessageSquare } from 'lucide-react';
+import { useTranslation } from '../i18n/i18nContext';
 
 export interface HelpContent {
     description: string;
@@ -108,6 +109,8 @@ interface SidebarProps {
 }
 
 export const Sidebar = ({ onOpenHelp }: SidebarProps) => {
+    const { t } = useTranslation();
+
     const openHelp = (title: string, content: HelpContent | string) => {
         console.log('🔍 openHelp chiamato:', title);
         console.log('📄 Contenuto:', content);
@@ -117,24 +120,14 @@ export const Sidebar = ({ onOpenHelp }: SidebarProps) => {
 
     return (
         <aside className="glass-panel sidebar-container">
-            <div style={{ marginBottom: '10px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <img src="/logo.png" alt="Logo" style={{ width: '32px', height: '32px', borderRadius: '8px' }} />
-                    <h2 style={{ margin: 0, fontSize: '1.5rem', background: 'linear-gradient(to right, #6366f1, #a855f7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Flow Chart</h2>
-                </div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '4px', fontStyle: 'italic', marginLeft: '42px' }}>
-                    Powered by prof. Carello
-                </div>
-            </div>
-
             <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '10px' }}>
-                Trascina e rilascia i blocchi nell'editor.
+                {t('sidebar.instruction')}
             </div>
 
             <SidebarItem
                 type="start"
-                label="Start"
-                description="Inizio del flusso"
+                label={t('sidebar.nodes.start.label')}
+                description={t('sidebar.nodes.start.description')}
                 icon={Play}
                 color="var(--node-start-bg)"
                 helpContent={{
@@ -146,8 +139,8 @@ export const Sidebar = ({ onOpenHelp }: SidebarProps) => {
             />
             <SidebarItem
                 type="process"
-                label="Process"
-                description="Esegue un'azione"
+                label={t('sidebar.nodes.process.label')}
+                description={t('sidebar.nodes.process.description')}
                 icon={ArrowRight}
                 color="var(--node-process-bg)"
                 helpContent={{
@@ -159,8 +152,8 @@ export const Sidebar = ({ onOpenHelp }: SidebarProps) => {
             />
             <SidebarItem
                 type="decision"
-                label="Decision"
-                description="Controlla condizione"
+                label={t('sidebar.nodes.decision.label')}
+                description={t('sidebar.nodes.decision.description')}
                 icon={Diamond}
                 color="var(--node-decision-bg)"
                 helpContent={{
@@ -172,8 +165,8 @@ export const Sidebar = ({ onOpenHelp }: SidebarProps) => {
             />
             <SidebarItem
                 type="input"
-                label="Input"
-                description="Legge un valore"
+                label={t('sidebar.nodes.input.label')}
+                description={t('sidebar.nodes.input.description')}
                 icon={Save}
                 color="var(--node-input-bg)"
                 helpContent={{
@@ -185,8 +178,8 @@ export const Sidebar = ({ onOpenHelp }: SidebarProps) => {
             />
             <SidebarItem
                 type="output"
-                label="Output"
-                description="Stampa un valore"
+                label={t('sidebar.nodes.output.label')}
+                description={t('sidebar.nodes.output.description')}
                 icon={LogOut}
                 color="var(--node-input-bg)"
                 helpContent={{
@@ -198,8 +191,8 @@ export const Sidebar = ({ onOpenHelp }: SidebarProps) => {
             />
             <SidebarItem
                 type="comment"
-                label="Comment"
-                description="Nota testuale"
+                label={t('sidebar.nodes.comment.label')}
+                description={t('sidebar.nodes.comment.description')}
                 icon={MessageSquare}
                 color="#fbbf24"
                 helpContent={{
@@ -211,8 +204,8 @@ export const Sidebar = ({ onOpenHelp }: SidebarProps) => {
             />
             <SidebarItem
                 type="end"
-                label="End"
-                description="Fine del flusso"
+                label={t('sidebar.nodes.end.label')}
+                description={t('sidebar.nodes.end.description')}
                 icon={Square}
                 color="var(--node-end-bg)"
                 helpContent={{
@@ -222,33 +215,6 @@ export const Sidebar = ({ onOpenHelp }: SidebarProps) => {
                 }}
                 onHelp={openHelp}
             />
-
-            <div style={{ marginTop: 'auto', paddingTop: '20px', borderTop: '1px solid var(--glass-border)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <a
-                    href="https://github.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn"
-                    style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '8px',
-                        background: '#24292e',
-                        color: 'white',
-                        textDecoration: 'none',
-                        fontSize: '0.9rem'
-                    }}
-                >
-                    <Github size={16} />
-                    GitHub Repo
-                </a>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', color: 'var(--text-secondary)', justifyContent: 'center' }}>
-                    <Mail size={14} />
-                    <a href="mailto:info@nicolocarello.it" style={{ color: 'inherit', textDecoration: 'none' }}>info@nicolocarello.it</a>
-                </div>
-            </div>
         </aside>
     );
 };

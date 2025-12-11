@@ -116,8 +116,8 @@ const FlowEditorContent = ({
 
     // Function to update node data (for editable nodes like Comment)
     const handleNodeDataChange = useCallback((nodeId: string, newData: any) => {
-        setNodes((nds) =>
-            nds.map((node) => {
+        setNodes((nds: Node[]) =>
+            nds.map((node: Node) => {
                 if (node.id === nodeId) {
                     return {
                         ...node,
@@ -141,10 +141,10 @@ const FlowEditorContent = ({
                 }
 
                 // Remove selected edges
-                setEdges((eds) => eds.filter((edge) => !edge.selected));
+                setEdges((eds: Edge[]) => eds.filter((edge: Edge) => !edge.selected));
 
                 // Also remove selected nodes
-                setNodes((nds) => nds.filter((node) => !node.selected));
+                setNodes((nds: Node[]) => nds.filter((node: Node) => !node.selected));
             }
         };
 

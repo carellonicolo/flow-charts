@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
 import { Terminal, Send, ChevronDown, ChevronUp } from 'lucide-react';
+import { useTranslation } from '../i18n/i18nContext';
 
 interface ConsoleProps {
     logs: string[];
@@ -13,6 +14,7 @@ export interface ConsoleRef {
 }
 
 export const Console = forwardRef<ConsoleRef, ConsoleProps>(({ logs, onInput, isWaitingForInput }, ref) => {
+    const { t } = useTranslation();
     const [inputValue, setInputValue] = useState('');
     const [consoleHeight, setConsoleHeight] = useState(300);
     const [consoleWidth, setConsoleWidth] = useState(400);
@@ -124,7 +126,7 @@ export const Console = forwardRef<ConsoleRef, ConsoleProps>(({ logs, onInput, is
                 {/* Titolo a sinistra */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <Terminal size={16} />
-                    <span style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>Console Output</span>
+                    <span style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>{t('console.title')}</span>
                 </div>
 
                 {/* Pulsante collapse a destra */}
@@ -150,7 +152,7 @@ export const Console = forwardRef<ConsoleRef, ConsoleProps>(({ logs, onInput, is
                         e.currentTarget.style.background = 'transparent';
                         e.currentTarget.style.color = 'var(--text-secondary)';
                     }}
-                    title={isCollapsed ? 'Espandi console' : 'Comprimi console'}
+                    title={isCollapsed ? t('console.expandTooltip') : t('console.collapseTooltip')}
                 >
                     {isCollapsed ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                 </button>
@@ -208,7 +210,7 @@ export const Console = forwardRef<ConsoleRef, ConsoleProps>(({ logs, onInput, is
                     type="text"
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
-                    placeholder={isWaitingForInput ? "Enter value..." : "Ready..."}
+                    placeholder={isWaitingForInput ? t('console.inputPlaceholderWaiting') : t('console.inputPlaceholderReady')}
                     disabled={!isWaitingForInput}
                     style={{
                         flexGrow: 1,

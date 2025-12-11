@@ -1,10 +1,12 @@
 import React from 'react';
 import { Handle, Position, type NodeProps } from 'reactflow';
 import { Play, Square, ArrowRight, Save, LogOut, Diamond, MessageSquare } from 'lucide-react';
+import { useTranslation } from '../i18n/i18nContext';
 
 const handleStyle = { width: 10, height: 10, background: '#fff', border: '2px solid #333' };
 
 export const StartNode = ({ }: NodeProps) => {
+    const { t } = useTranslation();
     return (
         <div className="glass-panel" style={{
             padding: '12px 24px',
@@ -19,13 +21,14 @@ export const StartNode = ({ }: NodeProps) => {
             border: '1px solid rgba(255,255,255,0.2)'
         }}>
             <Play size={18} color="white" />
-            <div style={{ color: 'white', fontWeight: 'bold', fontSize: '1rem', textShadow: '0 1px 2px rgba(0,0,0,0.2)' }}>Start</div>
+            <div style={{ color: 'white', fontWeight: 'bold', fontSize: '1rem', textShadow: '0 1px 2px rgba(0,0,0,0.2)' }}>{t('nodes.start')}</div>
             <Handle type="source" position={Position.Bottom} style={handleStyle} />
         </div>
     );
 };
 
 export const EndNode = ({ }: NodeProps) => {
+    const { t } = useTranslation();
     return (
         <div className="glass-panel" style={{
             padding: '12px 24px',
@@ -41,12 +44,13 @@ export const EndNode = ({ }: NodeProps) => {
         }}>
             <Handle type="target" position={Position.Top} style={handleStyle} />
             <Square size={18} color="white" />
-            <div style={{ color: 'white', fontWeight: 'bold', fontSize: '1rem', textShadow: '0 1px 2px rgba(0,0,0,0.2)' }}>End</div>
+            <div style={{ color: 'white', fontWeight: 'bold', fontSize: '1rem', textShadow: '0 1px 2px rgba(0,0,0,0.2)' }}>{t('nodes.end')}</div>
         </div>
     );
 };
 
 export const ProcessNode = ({ data }: NodeProps) => {
+    const { t } = useTranslation();
     return (
         <div className="glass-panel" style={{
             padding: '16px',
@@ -60,7 +64,7 @@ export const ProcessNode = ({ data }: NodeProps) => {
             <Handle type="target" position={Position.Top} style={handleStyle} />
             <div style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', opacity: 0.9 }}>
                 <ArrowRight size={14} color="white" />
-                <span style={{ color: 'white', fontSize: '11px', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.5px' }}>Process</span>
+                <span style={{ color: 'white', fontSize: '11px', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.5px' }}>{t('nodes.process')}</span>
             </div>
             <div style={{ color: 'white', fontWeight: 'bold', fontSize: '1.1rem' }}>{data.label}</div>
             <Handle type="source" position={Position.Bottom} style={handleStyle} />
@@ -69,6 +73,7 @@ export const ProcessNode = ({ data }: NodeProps) => {
 };
 
 export const DecisionNode = ({ data }: NodeProps) => {
+    const { t } = useTranslation();
     // Configurazione diamante
     const diamondSize = 140;
     const containerSize = 180;
@@ -184,7 +189,7 @@ export const DecisionNode = ({ data }: NodeProps) => {
                 textShadow: '0 1px 2px rgba(0,0,0,0.3)',
                 pointerEvents: 'none'
             }}>
-                True
+                {t('nodes.decisionTrue')}
             </div>
 
             {/* Label FALSE - a destra handle right */}
@@ -200,13 +205,14 @@ export const DecisionNode = ({ data }: NodeProps) => {
                 pointerEvents: 'none',
                 whiteSpace: 'nowrap'
             }}>
-                False
+                {t('nodes.decisionFalse')}
             </div>
         </div>
     );
 };
 
 export const InputNode = ({ data }: NodeProps) => {
+    const { t } = useTranslation();
     return (
         <div style={{
             position: 'relative',
@@ -230,7 +236,7 @@ export const InputNode = ({ data }: NodeProps) => {
                 }}>
                     <div style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', opacity: 0.9 }}>
                         <Save size={14} color="white" />
-                        <span style={{ color: 'white', fontSize: '11px', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.5px' }}>Input</span>
+                        <span style={{ color: 'white', fontSize: '11px', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.5px' }}>{t('nodes.input')}</span>
                     </div>
                     <div style={{ color: 'white', fontWeight: 'bold', fontSize: '1.1rem' }}>{data.label}</div>
                 </div>
@@ -242,6 +248,7 @@ export const InputNode = ({ data }: NodeProps) => {
 };
 
 export const OutputNode = ({ data }: NodeProps) => {
+    const { t } = useTranslation();
     return (
         <div style={{
             position: 'relative',
@@ -265,7 +272,7 @@ export const OutputNode = ({ data }: NodeProps) => {
                 }}>
                     <div style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', opacity: 0.9 }}>
                         <LogOut size={14} color="white" />
-                        <span style={{ color: 'white', fontSize: '11px', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.5px' }}>Output</span>
+                        <span style={{ color: 'white', fontSize: '11px', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.5px' }}>{t('nodes.output')}</span>
                     </div>
                     <div style={{ color: 'white', fontWeight: 'bold', fontSize: '1.1rem' }}>{data.label}</div>
                 </div>
@@ -277,6 +284,7 @@ export const OutputNode = ({ data }: NodeProps) => {
 };
 
 export const CommentNode = ({ data, id }: NodeProps) => {
+    const { t } = useTranslation();
     const [isEditing, setIsEditing] = React.useState(false);
     const [text, setText] = React.useState(data.label || "");
     const [size, setSize] = React.useState({ width: 130, height: 50 });
@@ -387,7 +395,7 @@ export const CommentNode = ({ data, id }: NodeProps) => {
                         padding: '0',
                         overflow: 'auto'
                     }}
-                    placeholder="Scrivi un commento..."
+                    placeholder={t('nodes.commentPlaceholder')}
                 />
             ) : (
                 <div
@@ -401,7 +409,7 @@ export const CommentNode = ({ data, id }: NodeProps) => {
                         overflow: 'auto'
                     }}
                 >
-                    {text || "Doppio click per modificare..."}
+                    {text || t('nodes.commentDefault')}
                 </div>
             )}
 

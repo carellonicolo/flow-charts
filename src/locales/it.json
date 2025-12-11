@@ -1,0 +1,98 @@
+{
+  "header": {
+    "toggleMenu": "Apri/chiudi menu",
+    "loadExample": "Carica esempio...",
+    "runFlow": "Esegui flusso",
+    "stopFlow": "Ferma flusso",
+    "runFlowTitle": "Esegui flusso",
+    "stopFlowTitle": "Ferma esecuzione",
+    "toggleConsole": "Apri/chiudi console",
+    "toggleTheme": "Cambia tema",
+    "githubRepo": "Repository GitHub",
+    "email": "Email",
+    "switchLanguage": "Cambia lingua (EN)",
+    "examples": {
+      "hello": "🌍 Hello World",
+      "counter": "🔁 Loop 1 a 5",
+      "sum": "➕ Somma due numeri",
+      "evenodd": "🔢 Pari o Dispari",
+      "max3": "📊 Massimo tra 3",
+      "factorial": "🧮 Fattoriale"
+    }
+  },
+  "sidebar": {
+    "instruction": "Trascina e rilascia i blocchi nell'editor.",
+    "nodes": {
+      "start": {
+        "label": "Start",
+        "description": "Inizio del flusso"
+      },
+      "process": {
+        "label": "Process",
+        "description": "Esegue un'azione"
+      },
+      "decision": {
+        "label": "Decision",
+        "description": "Controlla condizione"
+      },
+      "input": {
+        "label": "Input",
+        "description": "Legge un valore"
+      },
+      "output": {
+        "label": "Output",
+        "description": "Stampa un valore"
+      },
+      "comment": {
+        "label": "Comment",
+        "description": "Nota testuale"
+      },
+      "end": {
+        "label": "End",
+        "description": "Fine del flusso"
+      }
+    }
+  },
+  "console": {
+    "title": "Console Output",
+    "expandTooltip": "Espandi console",
+    "collapseTooltip": "Comprimi console",
+    "inputPlaceholderWaiting": "Inserisci un valore...",
+    "inputPlaceholderReady": "Pronto..."
+  },
+  "properties": {
+    "title": "Proprietà",
+    "typeLabel": "Tipo: ",
+    "expressionLabel": "Espressione (es. x = 5)",
+    "expressionPlaceholder": "x = x + 1",
+    "conditionLabel": "Condizione (es. x > 10)",
+    "conditionPlaceholder": "x > 0",
+    "variableLabel": "Nome variabile",
+    "variablePlaceholder": "miaVariabile",
+    "messageLabel": "Messaggio",
+    "messagePlaceholder": "Inserisci un valore",
+    "noProperties": "Nessuna proprietà da configurare.",
+    "updateButton": "Aggiorna nodo"
+  },
+  "modal": {
+    "descriptionTitle": "Descrizione",
+    "usageTitle": "Come usarlo",
+    "exampleTitle": "Esempio",
+    "visualExampleTitle": "Esempio visivo"
+  },
+  "nodes": {
+    "start": "Start",
+    "end": "End",
+    "process": "Process",
+    "decision": "Decision",
+    "input": "Input",
+    "output": "Output",
+    "comment": "Comment",
+    "true": "True",
+    "false": "False",
+    "decisionTrue": "Vero",
+    "decisionFalse": "Falso",
+    "commentPlaceholder": "Scrivi un commento...",
+    "commentDefault": "Doppio click per modificare..."
+  }
+}

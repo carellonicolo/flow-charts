@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Settings, X } from 'lucide-react';
 import type { Node } from 'reactflow';
+import { useTranslation } from '../i18n/i18nContext';
 
 interface PropertiesPanelProps {
     selectedNode: Node | null;
@@ -9,6 +10,7 @@ interface PropertiesPanelProps {
 }
 
 export const PropertiesPanel = ({ selectedNode, onUpdateNode, onClose }: PropertiesPanelProps) => {
+    const { t } = useTranslation();
     const [label, setLabel] = useState('');
 
     // Additional fields for specific node types
@@ -74,7 +76,7 @@ export const PropertiesPanel = ({ selectedNode, onUpdateNode, onClose }: Propert
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--glass-border)', paddingBottom: '10px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <Settings size={18} />
-                    <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Properties</h3>
+                    <h3 style={{ margin: 0, fontSize: '1.1rem' }}>{t('properties.title')}</h3>
                 </div>
                 <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}>
                     <X size={18} />
@@ -82,7 +84,7 @@ export const PropertiesPanel = ({ selectedNode, onUpdateNode, onClose }: Propert
             </div>
 
             <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-                Type: <span style={{ fontWeight: 'bold', color: 'var(--text-color)', textTransform: 'capitalize' }}>{selectedNode.type}</span>
+                {t('properties.typeLabel')}<span style={{ fontWeight: 'bold', color: 'var(--text-color)', textTransform: 'capitalize' }}>{selectedNode.type}</span>
             </div>
 
             {/* Common Label Field (optional, maybe hidden for specific types if we want to enforce structure) */}
@@ -98,13 +100,13 @@ export const PropertiesPanel = ({ selectedNode, onUpdateNode, onClose }: Propert
 
             {selectedNode.type === 'process' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                    <label style={{ fontSize: '0.8rem' }}>Expression (e.g., x = 5)</label>
+                    <label style={{ fontSize: '0.8rem' }}>{t('properties.expressionLabel')}</label>
                     <input
                         type="text"
                         value={expression}
                         onChange={(e) => setExpression(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        placeholder="x = x + 1"
+                        placeholder={t('properties.expressionPlaceholder')}
                         style={{ padding: '8px', borderRadius: '4px', border: '1px solid var(--glass-border)', background: 'rgba(0,0,0,0.2)', color: 'var(--text-color)' }}
                     />
                 </div>
@@ -112,13 +114,13 @@ export const PropertiesPanel = ({ selectedNode, onUpdateNode, onClose }: Propert
 
             {selectedNode.type === 'decision' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                    <label style={{ fontSize: '0.8rem' }}>Condition (e.g., x {'>'} 10)</label>
+                    <label style={{ fontSize: '0.8rem' }}>{t('properties.conditionLabel')}</label>
                     <input
                         type="text"
                         value={condition}
                         onChange={(e) => setCondition(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        placeholder="x > 0"
+                        placeholder={t('properties.conditionPlaceholder')}
                         style={{ padding: '8px', borderRadius: '4px', border: '1px solid var(--glass-border)', background: 'rgba(0,0,0,0.2)', color: 'var(--text-color)' }}
                     />
                 </div>
@@ -126,13 +128,13 @@ export const PropertiesPanel = ({ selectedNode, onUpdateNode, onClose }: Propert
 
             {(selectedNode.type === 'input' || selectedNode.type === 'output') && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                    <label style={{ fontSize: '0.8rem' }}>Variable Name</label>
+                    <label style={{ fontSize: '0.8rem' }}>{t('properties.variableLabel')}</label>
                     <input
                         type="text"
                         value={variableName}
                         onChange={(e) => setVariableName(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        placeholder="myVar"
+                        placeholder={t('properties.variablePlaceholder')}
                         style={{ padding: '8px', borderRadius: '4px', border: '1px solid var(--glass-border)', background: 'rgba(0,0,0,0.2)', color: 'var(--text-color)' }}
                     />
                 </div>
@@ -140,12 +142,12 @@ export const PropertiesPanel = ({ selectedNode, onUpdateNode, onClose }: Propert
 
             {(selectedNode.type === 'start' || selectedNode.type === 'end') && (
                 <div style={{ fontSize: '0.9rem', color: '#94a3b8', fontStyle: 'italic' }}>
-                    No properties to configure.
+                    {t('properties.noProperties')}
                 </div>
             )}
 
             <button className="btn btn-primary" onClick={handleSave} style={{ marginTop: '10px' }}>
-                Update Node
+                {t('properties.updateButton')}
             </button>
         </div>
     );

@@ -116,6 +116,8 @@ body {
   display: flex;
   flex: 1;
   overflow: hidden;
+  margin-top: 80px;
+  height: calc(100vh - 80px);
 }
 
 /* ReactFlow Controls Dark Mode Override */
@@ -142,6 +144,72 @@ body {
 
 /* Responsive Components */
 
+/* Header */
+.header-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 70px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  margin: 10px;
+  margin-bottom: 0;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+}
+
+.header-title-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.header-title {
+  margin: 0;
+  font-size: 1.25rem;
+  line-height: 1.2;
+  background: linear-gradient(to right, #6366f1, #a855f7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.header-subtitle {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.header-controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-link {
+  text-decoration: none;
+}
+
 /* Sidebar */
 .sidebar-container {
   width: 250px;
@@ -150,7 +218,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 15px;
-  height: calc(100vh - 40px);
+  height: calc(100vh - 120px);
   overflow-y: auto;
   /* Enable scrolling */
   min-width: 250px;
@@ -339,6 +407,47 @@ body {
 
   .desktop-only {
     display: none !important;
+  }
+
+  /* Header Mobile */
+  .header-container {
+    height: auto;
+    flex-wrap: wrap;
+    padding: 10px 15px;
+    gap: 10px;
+  }
+
+  .header-left {
+    flex: 0 0 auto;
+  }
+
+  .header-logo {
+    width: 24px;
+    height: 24px;
+  }
+
+  .header-title {
+    font-size: 1rem;
+  }
+
+  .header-subtitle {
+    display: none;
+  }
+
+  .header-controls {
+    flex: 1;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .header-right {
+    flex: 0 0 auto;
+    gap: 8px;
+  }
+
+  .main-content {
+    margin-top: 70px;
+    height: calc(100vh - 70px);
   }
 
   /* Sidebar Drawer */

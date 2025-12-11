@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNodesState, useEdgesState } from 'reactflow';
-import { Moon, Sun, Play, Menu, Terminal, Square } from 'lucide-react';
 import { FlowEditor } from './components/FlowEditor';
 import { Console } from './components/Console';
 import { PropertiesPanel } from './components/PropertiesPanel';
 import { Sidebar, type HelpContent } from './components/Sidebar';
+import { Header } from './components/Header';
 import { HelpModal } from './components/HelpModal';
 import { Toast } from './components/Toast';
 import { Executor } from './engine/Executor';
@@ -283,73 +283,23 @@ function App() {
 
   return (
     <div className="app-container" data-theme={theme}>
+      <Header
+        theme={theme}
+        onToggleTheme={toggleTheme}
+        isExecuting={isExecuting}
+        onRun={handleRun}
+        onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+        isConsoleOpen={isConsoleOpen}
+        onToggleConsole={() => setIsConsoleOpen(!isConsoleOpen)}
+        onLoadExample={loadExample}
+      />
+
       <div className="main-content">
         <div className={`sidebar-wrapper ${isSidebarOpen ? 'open' : ''}`}>
           <Sidebar onOpenHelp={handleOpenHelp} />
         </div>
-        
+
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative' }}>
-          <div className="top-controls">
-            {/* Mobile Menu Toggle */}
-            <button 
-              className="btn btn-icon mobile-only" 
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              title="Toggle Menu"
-            >
-              <Menu size={20} />
-            </button>
-
-            <select
-              onChange={(e) => {
-                if (e.target.value) loadExample(e.target.value);
-              }}
-              className="example-select"
-              defaultValue=""
-            >
-              <option value="" disabled>Load Example...</option>
-              <option value="hello">🌍 Hello World</option>
-              <option value="counter">🔁 Loop 1 to 5</option>
-              <option value="sum">➕ Somma due numeri</option>
-              <option value="evenodd">🔢 Pari o Dispari</option>
-              <option value="max3">📊 Massimo tra 3</option>
-              <option value="factorial">🧮 Fattoriale</option>
-            </select>
-
-            <button
-              className="btn btn-primary"
-              onClick={handleRun}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                background: isExecuting ? '#ef4444' : 'var(--primary-color)',
-                transition: 'background 0.3s ease'
-              }}
-              title={isExecuting ? 'Stop Execution' : 'Run Flow'}
-            >
-              {isExecuting ? <Square size={16} /> : <Play size={16} />}
-              <span className="desktop-only">{isExecuting ? 'Stop Flow' : 'Run Flow'}</span>
-            </button>
-
-            {/* Mobile Console Toggle */}
-            <button
-              className={`btn btn-icon mobile-only ${isConsoleOpen ? 'active' : ''}`}
-              onClick={() => setIsConsoleOpen(!isConsoleOpen)}
-              title="Toggle Console"
-              style={{ color: isConsoleOpen ? 'var(--primary-color)' : 'inherit' }}
-            >
-              <Terminal size={20} />
-            </button>
-
-            <button
-              onClick={toggleTheme}
-              className="btn btn-icon"
-              title="Toggle Theme"
-            >
-              {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
-            </button>
-          </div>
-          
           <FlowEditor
             nodes={nodes}
             edges={edges}

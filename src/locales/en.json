@@ -1,0 +1,98 @@
+{
+  "header": {
+    "toggleMenu": "Toggle Menu",
+    "loadExample": "Load Example...",
+    "runFlow": "Run Flow",
+    "stopFlow": "Stop Flow",
+    "runFlowTitle": "Run Flow",
+    "stopFlowTitle": "Stop Execution",
+    "toggleConsole": "Toggle Console",
+    "toggleTheme": "Toggle Theme",
+    "githubRepo": "GitHub Repo",
+    "email": "Email",
+    "switchLanguage": "Switch language (IT)",
+    "examples": {
+      "hello": "🌍 Hello World",
+      "counter": "🔁 Loop 1 to 5",
+      "sum": "➕ Sum two numbers",
+      "evenodd": "🔢 Even or Odd",
+      "max3": "📊 Maximum of 3",
+      "factorial": "🧮 Factorial"
+    }
+  },
+  "sidebar": {
+    "instruction": "Drag and drop blocks into the editor.",
+    "nodes": {
+      "start": {
+        "label": "Start",
+        "description": "Start of flow"
+      },
+      "process": {
+        "label": "Process",
+        "description": "Executes an action"
+      },
+      "decision": {
+        "label": "Decision",
+        "description": "Checks condition"
+      },
+      "input": {
+        "label": "Input",
+        "description": "Reads a value"
+      },
+      "output": {
+        "label": "Output",
+        "description": "Prints a value"
+      },
+      "comment": {
+        "label": "Comment",
+        "description": "Text note"
+      },
+      "end": {
+        "label": "End",
+        "description": "End of flow"
+      }
+    }
+  },
+  "console": {
+    "title": "Console Output",
+    "expandTooltip": "Expand console",
+    "collapseTooltip": "Collapse console",
+    "inputPlaceholderWaiting": "Enter value...",
+    "inputPlaceholderReady": "Ready..."
+  },
+  "properties": {
+    "title": "Properties",
+    "typeLabel": "Type: ",
+    "expressionLabel": "Expression (e.g., x = 5)",
+    "expressionPlaceholder": "x = x + 1",
+    "conditionLabel": "Condition (e.g., x > 10)",
+    "conditionPlaceholder": "x > 0",
+    "variableLabel": "Variable Name",
+    "variablePlaceholder": "myVar",
+    "messageLabel": "Message",
+    "messagePlaceholder": "Enter a value",
+    "noProperties": "No properties to configure.",
+    "updateButton": "Update Node"
+  },
+  "modal": {
+    "descriptionTitle": "Description",
+    "usageTitle": "How to use it",
+    "exampleTitle": "Example",
+    "visualExampleTitle": "Visual example"
+  },
+  "nodes": {
+    "start": "Start",
+    "end": "End",
+    "process": "Process",
+    "decision": "Decision",
+    "input": "Input",
+    "output": "Output",
+    "comment": "Comment",
+    "true": "True",
+    "false": "False",
+    "decisionTrue": "True",
+    "decisionFalse": "False",
+    "commentPlaceholder": "Write a comment...",
+    "commentDefault": "Double click to edit..."
+  }
+}

@@ -1,4 +1,5 @@
 import { X } from 'lucide-react';
+import { useTranslation } from '../i18n/i18nContext';
 
 export interface HelpContent {
     description: string;
@@ -15,6 +16,7 @@ interface HelpModalProps {
 }
 
 export const HelpModal = ({ isOpen, onClose, title, content }: HelpModalProps) => {
+    const { t } = useTranslation();
     console.log('🎭 HelpModal render - isOpen:', isOpen, 'title:', title);
 
     if (!isOpen) {
@@ -97,7 +99,7 @@ export const HelpModal = ({ isOpen, onClose, title, content }: HelpModalProps) =
                             color: 'var(--primary-color)',
                             fontSize: '1.1rem'
                         }}>
-                            Descrizione
+                            {t('modal.descriptionTitle')}
                         </h4>
                         <p style={{
                             margin: 0,
@@ -116,7 +118,7 @@ export const HelpModal = ({ isOpen, onClose, title, content }: HelpModalProps) =
                                 color: 'var(--primary-color)',
                                 fontSize: '1.1rem'
                             }}>
-                                Come usarlo
+                                {t('modal.usageTitle')}
                             </h4>
                             <p style={{
                                 margin: 0,
@@ -136,7 +138,7 @@ export const HelpModal = ({ isOpen, onClose, title, content }: HelpModalProps) =
                                 color: 'var(--primary-color)',
                                 fontSize: '1.1rem'
                             }}>
-                                Esempio
+                                {t('modal.exampleTitle')}
                             </h4>
                             <pre style={{
                                 margin: 0,
@@ -161,7 +163,7 @@ export const HelpModal = ({ isOpen, onClose, title, content }: HelpModalProps) =
                                 color: 'var(--primary-color)',
                                 fontSize: '1.1rem'
                             }}>
-                                Esempio visivo
+                                {t('modal.visualExampleTitle')}
                             </h4>
                             <img
                                 src={helpContent.image}
