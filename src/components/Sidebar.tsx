@@ -2,12 +2,22 @@ import React from 'react';
 
 import { Play, Square, ArrowRight, Save, LogOut, Diamond, HelpCircle, MessageSquare } from 'lucide-react';
 import { useTranslation } from '../i18n/i18nContext';
+import {
+    StartNodePreview,
+    EndNodePreview,
+    ProcessNodePreview,
+    DecisionNodePreview,
+    InputNodePreview,
+    OutputNodePreview,
+    CommentNodePreview
+} from './NodePreviews';
 
 export interface HelpContent {
     description: string;
     usage: string;
     example: string;
     image?: string;
+    preview?: React.ReactNode;
 }
 
 const SidebarItem = ({ type, label, description, icon: Icon, color, helpContent, onHelp }: any) => {
@@ -133,7 +143,8 @@ export const Sidebar = ({ onOpenHelp }: SidebarProps) => {
                 helpContent={{
                     description: "Il blocco Start rappresenta il punto di partenza del tuo flowchart. Ogni diagramma di flusso deve iniziare con questo blocco.",
                     usage: "Trascina questo blocco nell'editor come primo elemento del tuo programma. Da qui partirà l'esecuzione del tuo algoritmo.",
-                    example: "Ogni flowchart inizia sempre con Start:\n\nStart → Process → End"
+                    example: "Ogni flowchart inizia sempre con Start:\n\nStart → Process → End",
+                    preview: <StartNodePreview />
                 }}
                 onHelp={openHelp}
             />
@@ -146,7 +157,8 @@ export const Sidebar = ({ onOpenHelp }: SidebarProps) => {
                 helpContent={{
                     description: "Il blocco Process esegue operazioni, calcoli o assegnazioni di valori alle variabili. È il blocco più usato per elaborare i dati.",
                     usage: "Clicca sul blocco per aprire il pannello proprietà. Inserisci il nome della variabile e l'espressione da calcolare. Esempio: variabile 'x' con espressione 'x + 1' incrementa x di 1.",
-                    example: "Assegnazione semplice:\nx = 5\n\nCalcolo:\nrisultato = (a + b) * 2\n\nIncremento:\ncontatore = contatore + 1"
+                    example: "Assegnazione semplice:\nx = 5\n\nCalcolo:\nrisultato = (a + b) * 2\n\nIncremento:\ncontatore = contatore + 1",
+                    preview: <ProcessNodePreview />
                 }}
                 onHelp={openHelp}
             />
@@ -159,7 +171,8 @@ export const Sidebar = ({ onOpenHelp }: SidebarProps) => {
                 helpContent={{
                     description: "Il blocco Decision crea un bivio nel programma. Valuta una condizione booleana (vera/falsa) e sceglie quale percorso seguire.",
                     usage: "Imposta una condizione logica nelle proprietà del blocco. Il ramo 'True' si esegue se la condizione è vera, il ramo 'False' se è falsa. Collega i connettori corretti ai blocchi successivi.",
-                    example: "Esempi di condizioni:\n\nx > 10\neta >= 18\nnome == \"Mario\"\n(a > 5) && (b < 20)\nispari == true"
+                    example: "Esempi di condizioni:\n\nx > 10\neta >= 18\nnome == \"Mario\"\n(a > 5) && (b < 20)\nispari == true",
+                    preview: <DecisionNodePreview />
                 }}
                 onHelp={openHelp}
             />
@@ -172,7 +185,8 @@ export const Sidebar = ({ onOpenHelp }: SidebarProps) => {
                 helpContent={{
                     description: "Il blocco Input permette di chiedere dati all'utente durante l'esecuzione. Il valore inserito viene salvato in una variabile.",
                     usage: "Specifica il nome della variabile dove salvare l'input e un messaggio opzionale da mostrare all'utente. Durante l'esecuzione, apparirà una finestra di input nella console.",
-                    example: "Input semplice:\nVariabile: nome\nMessaggio: \"Inserisci il tuo nome\"\n\nInput numerico:\nVariabile: eta\nMessaggio: \"Quanti anni hai?\""
+                    example: "Input semplice:\nVariabile: nome\nMessaggio: \"Inserisci il tuo nome\"\n\nInput numerico:\nVariabile: eta\nMessaggio: \"Quanti anni hai?\"",
+                    preview: <InputNodePreview />
                 }}
                 onHelp={openHelp}
             />
@@ -185,7 +199,8 @@ export const Sidebar = ({ onOpenHelp }: SidebarProps) => {
                 helpContent={{
                     description: "Il blocco Output mostra messaggi o valori di variabili nella console. Utile per visualizzare risultati o informazioni durante l'esecuzione.",
                     usage: "Inserisci un'espressione o un testo tra virgolette. Puoi stampare variabili, calcoli o messaggi fissi. I risultati appariranno nella console in basso.",
-                    example: "Stampa testo:\n\"Benvenuto!\"\n\nStampa variabile:\nx\n\nStampa combinata:\n\"Il risultato è: \" + risultato\n\nStampa calcolo:\nx * 2"
+                    example: "Stampa testo:\n\"Benvenuto!\"\n\nStampa variabile:\nx\n\nStampa combinata:\n\"Il risultato è: \" + risultato\n\nStampa calcolo:\nx * 2",
+                    preview: <OutputNodePreview />
                 }}
                 onHelp={openHelp}
             />
@@ -198,7 +213,8 @@ export const Sidebar = ({ onOpenHelp }: SidebarProps) => {
                 helpContent={{
                     description: "Il blocco Comment ti permette di aggiungere note e spiegazioni al tuo flowchart senza influenzare l'esecuzione del programma.",
                     usage: "Usa i commenti per documentare il codice, spiegare logiche complesse o lasciare promemoria. I commenti vengono ignorati durante l'esecuzione.",
-                    example: "Esempi di commenti:\n\n\"Questo blocco calcola la media\"\n\n\"TODO: aggiungere controllo errori\"\n\n\"Algoritmo di ordinamento bubble sort\""
+                    example: "Esempi di commenti:\n\n\"Questo blocco calcola la media\"\n\n\"TODO: aggiungere controllo errori\"\n\n\"Algoritmo di ordinamento bubble sort\"",
+                    preview: <CommentNodePreview />
                 }}
                 onHelp={openHelp}
             />
@@ -211,10 +227,33 @@ export const Sidebar = ({ onOpenHelp }: SidebarProps) => {
                 helpContent={{
                     description: "Il blocco End rappresenta la fine del programma. Quando l'esecuzione raggiunge questo blocco, il flowchart termina.",
                     usage: "Posiziona questo blocco alla fine del tuo flowchart o alla fine di ogni percorso possibile. Ogni programma deve avere almeno un blocco End.",
-                    example: "Struttura base:\nStart → Process → Output → End\n\nCon decisione:\nStart → Decision\n  ├─ True → Process → End\n  └─ False → End"
+                    example: "Struttura base:\nStart → Process → Output → End\n\nCon decisione:\nStart → Decision\n  ├─ True → Process → End\n  └─ False → End",
+                    preview: <EndNodePreview />
                 }}
                 onHelp={openHelp}
             />
+
+            {/* Footer con email */}
+            <div style={{
+                marginTop: 'auto',
+                padding: '16px',
+                borderTop: '1px solid var(--glass-border)',
+                textAlign: 'center'
+            }}>
+                <a
+                    href="mailto:info@nicolocarello.it"
+                    style={{
+                        color: 'var(--text-secondary)',
+                        textDecoration: 'none',
+                        fontSize: '0.85rem',
+                        transition: 'color 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.color = 'var(--primary-color)'}
+                    onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}
+                >
+                    info@nicolocarello.it
+                </a>
+            </div>
         </aside>
     );
 };

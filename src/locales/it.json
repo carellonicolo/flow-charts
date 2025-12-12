@@ -11,6 +11,7 @@
     "githubRepo": "Repository GitHub",
     "email": "Email",
     "switchLanguage": "Cambia lingua (EN)",
+    "help": "Aiuto",
     "examples": {
       "hello": "🌍 Hello World",
       "counter": "🔁 Loop 1 a 5",
@@ -24,11 +25,11 @@
     "instruction": "Trascina e rilascia i blocchi nell'editor.",
     "nodes": {
       "start": {
-        "label": "Start",
+        "label": "Inizio",
         "description": "Inizio del flusso"
       },
       "process": {
-        "label": "Process",
+        "label": "Azione",
         "description": "Esegue un'azione"
       },
       "decision": {
@@ -44,11 +45,11 @@
         "description": "Stampa un valore"
       },
       "comment": {
-        "label": "Comment",
+        "label": "Commento",
         "description": "Nota testuale"
       },
       "end": {
-        "label": "End",
+        "label": "Fine",
         "description": "Fine del flusso"
       }
     }
@@ -58,7 +59,14 @@
     "expandTooltip": "Espandi console",
     "collapseTooltip": "Comprimi console",
     "inputPlaceholderWaiting": "Inserisci un valore...",
-    "inputPlaceholderReady": "Pronto..."
+    "inputPlaceholderReady": "Pronto...",
+    "help": "Aiuto Console"
+  },
+  "consoleHelp": {
+    "title": "Console - Guida",
+    "description": "La console mostra l'output dell'esecuzione del tuo diagramma di flusso. Qui puoi vedere i messaggi dei blocchi Output, i valori delle variabili, eventuali errori, e inserire dati quando richiesti dai blocchi Input.",
+    "usage": "Durante l'esecuzione, la console mostra i messaggi in tempo reale. Quando un blocco Input richiede un valore, il campo di input in basso si attiverà. Digita il valore richiesto e premi Invio o clicca sull'icona di invio. Puoi ridimensionare la console trascinando l'angolo in alto a sinistra.",
+    "example": "Esempio di output:\n• Output: Ciao mondo!\n• Input: x = 5\n• Output: Il risultato è 10\n\nI messaggi di errore appariranno in rosso, gli input in viola, e gli output in blu."
   },
   "properties": {
     "title": "Proprietà",
@@ -78,21 +86,34 @@
     "descriptionTitle": "Descrizione",
     "usageTitle": "Come usarlo",
     "exampleTitle": "Esempio",
-    "visualExampleTitle": "Esempio visivo"
+    "theoryTitle": "Teoria e Fondamenti",
+    "visualExampleTitle": "Esempio visivo",
+    "usageTab": "Funzionamento",
+    "theoryTab": "Teoria",
+    "featuresTitle": "🎯 Funzionalità Principali",
+    "stepsTitle": "📋 Come Iniziare",
+    "tipsTitle": "Suggerimenti Utili"
   },
   "nodes": {
-    "start": "Start",
-    "end": "End",
-    "process": "Process",
+    "start": "Inizio",
+    "end": "Fine",
+    "process": "Azione",
     "decision": "Decision",
     "input": "Input",
     "output": "Output",
-    "comment": "Comment",
+    "comment": "Commento",
     "true": "True",
     "false": "False",
     "decisionTrue": "Vero",
     "decisionFalse": "Falso",
     "commentPlaceholder": "Scrivi un commento...",
     "commentDefault": "Doppio click per modificare..."
+  },
+  "help": {
+    "title": "Benvenuto in Flow Chart",
+    "description": "Flow Chart è un'applicazione web interattiva per creare e visualizzare diagrammi di flusso. Permette di progettare algoritmi in modo visuale trascinando e collegando blocchi funzionali. Ogni diagramma può essere eseguito direttamente nell'app per vedere il risultato in tempo reale.",
+    "usage": "Trascina i blocchi dalla sidebar a sinistra nel canvas centrale. Collega i blocchi trascinando da un punto di connessione all'altro. Fai doppio click su un blocco per modificarne le proprietà. Usa il pulsante 'Esegui flusso' per testare il tuo algoritmo. La console in basso a destra mostrerà l'output dell'esecuzione.",
+    "example": "Prova a caricare un esempio dal menu 'Carica esempio' per vedere come funziona. Gli esempi includono: Hello World, cicli, condizioni, e calcoli matematici.",
+    "theory": "COSA SONO I DIAGRAMMI DI FLUSSO\n\nI diagrammi di flusso (flowchart) sono rappresentazioni grafiche di algoritmi e processi. Inventati negli anni '20 e standardizzati negli anni '60, sono uno strumento fondamentale per:\n• Progettare algoritmi prima di scrivere codice\n• Documentare processi complessi in modo chiaro\n• Analizzare e ottimizzare procedure esistenti\n• Comunicare logiche di programmazione senza ambiguità\n\nSTRUTTURA E COMPONENTI\n\nUn diagramma di flusso è composto da blocchi geometrici collegati da frecce che indicano il flusso di esecuzione:\n\n1. BLOCCO INIZIO/FINE (ovale): Marca l'inizio e la fine del programma. Ogni flowchart deve avere esattamente un punto di inizio e almeno un punto di fine.\n\n2. BLOCCO AZIONE (rettangolo): Rappresenta un'operazione o istruzione da eseguire. Esempi: assegnazioni (x = 5), calcoli (somma = a + b), operazioni matematiche.\n\n3. BLOCCO DECISIONE (rombo): Rappresenta una condizione che può essere vera o falsa. Il flusso si divide in due percorsi: uno per il caso \"vero\" e uno per il caso \"falso\". Esempi: x > 10, età >= 18, numero == 0.\n\n4. BLOCCO INPUT (parallelogramma): Richiede l'inserimento di dati dall'utente o da fonti esterne. Serve per acquisire informazioni necessarie all'algoritmo.\n\n5. BLOCCO OUTPUT (parallelogramma): Mostra risultati, messaggi o dati all'utente. Serve per comunicare i risultati dell'elaborazione.\n\n6. CONNETTORI (frecce): Indicano la direzione del flusso di esecuzione da un blocco all'altro. Il flusso generalmente procede dall'alto verso il basso e da sinistra a destra.\n\nPRINCIPI FONDAMENTALI\n\n• SEQUENZIALITÀ: Le istruzioni vengono eseguite una dopo l'altra nell'ordine in cui appaiono.\n\n• SELEZIONE: Attraverso i blocchi decisione, il programma può scegliere percorsi alternativi basandosi su condizioni.\n\n• ITERAZIONE: Collegando i blocchi in modo da formare cicli, si possono ripetere operazioni multiple volte.\n\nAPPLICAZIONI PRATICHE\n\nI diagrammi di flusso sono utilizzati in:\n• Informatica: progettazione di algoritmi e debugging\n• Ingegneria: documentazione di processi industriali\n• Business: mappatura di procedure aziendali\n• Educazione: insegnamento della logica di programmazione\n• Qualità: analisi e miglioramento di processi\n\nVANTAGGI\n\n✓ Visualizzazione chiara della logica\n✓ Facile identificazione di errori\n✓ Comunicazione efficace tra team\n✓ Indipendente dal linguaggio di programmazione\n✓ Documentazione autoesplicativa\n\nBUONE PRATICHE\n\n• Mantenere i diagrammi semplici e leggibili\n• Usare nomi di variabili significativi\n• Evitare incroci di frecce quando possibile\n• Commentare sezioni complesse\n• Testare tutti i percorsi possibili"
   }
 }

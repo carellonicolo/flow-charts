@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
-import { Terminal, Send, ChevronDown, ChevronUp } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { Terminal, Send, ChevronDown, ChevronUp, HelpCircle } from 'lucide-react';
 import { useTranslation } from '../i18n/i18nContext';
+import { HelpModal } from './HelpModal';
 
 interface ConsoleProps {
     logs: string[];
@@ -19,6 +21,7 @@ export const Console = forwardRef<ConsoleRef, ConsoleProps>(({ logs, onInput, is
     const [consoleHeight, setConsoleHeight] = useState(300);
     const [consoleWidth, setConsoleWidth] = useState(400);
     const [isCollapsed, setIsCollapsed] = useState(false);
+    const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
     const endRef = useRef<HTMLDivElement>(null);
     const inputCallbackRef = useRef<((value: string) => void) | null>(null);
     const isResizingCorner = useRef(false);
@@ -81,6 +84,7 @@ export const Console = forwardRef<ConsoleRef, ConsoleProps>(({ logs, onInput, is
     };
 
     return (
+        <>
         <div className="glass-panel console-wrapper" style={{
             height: isCollapsed ? '50px' : `${consoleHeight}px`,
             width: `${consoleWidth}px`,
@@ -204,8 +208,24 @@ export const Console = forwardRef<ConsoleRef, ConsoleProps>(({ logs, onInput, is
                 padding: '10px',
                 borderTop: '1px solid var(--glass-border)',
                 display: 'flex',
-                gap: '10px'
+                gap: '8px',
+                alignItems: 'center'
             }}>
+                <button
+                    type="button"
+                    onClick={() => setIsHelpModalOpen(true)}
+                    className="btn btn-icon"
+                    style={{
+                        padding: '5px',
+                        minWidth: '32px',
+                        height: '32px',
+                        background: 'transparent',
+                        border: '1px solid var(--glass-border)'
+                    }}
+                    title={t('console.help')}
+                >
+                    <HelpCircle size={16} />
+                </button>
                 <input
                     type="text"
                     value={inputValue}
@@ -232,7 +252,23 @@ export const Console = forwardRef<ConsoleRef, ConsoleProps>(({ logs, onInput, is
                 </button>
                 </form>
             )}
+
         </div>
+        {/* Help Modal rendered via Portal outside console */}
+        {createPortal(
+            <HelpModal
+                isOpen={isHelpModalOpen}
+                onClose={() => setIsHelpModalOpen(false)}
+                title={t('consoleHelp.title')}
+                content={{
+                    description: t('consoleHelp.description'),
+                    usage: t('consoleHelp.usage'),
+                    example: t('consoleHelp.example')
+                }}
+            />,
+            document.body
+        )}
+        </>
     );
 });
 

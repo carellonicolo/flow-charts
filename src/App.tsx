@@ -160,8 +160,8 @@ function App() {
         { id: '3', type: 'end', position: { x: 300, y: 350 }, data: { label: 'End' } },
       ];
       newEdges = [
-        { id: 'e1-2', source: '1', target: '2', type: 'smoothstep', animated: true },
-        { id: 'e2-3', source: '2', target: '3', type: 'smoothstep', animated: true },
+        { id: 'e1-2', source: '1', target: '2', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'e2-3', source: '2', target: '3', type: 'waypoint', data: { waypoints: [] }, animated: true },
       ];
     } else if (exampleName === 'counter') {
       newNodes = [
@@ -174,12 +174,12 @@ function App() {
         { id: '6', type: 'end', position: { x: 580, y: 240 }, data: { label: 'End' } },
       ];
       newEdges = [
-        { id: 'e1-2', source: '1', target: '2', type: 'smoothstep', animated: true },
-        { id: 'e2-3', source: '2', target: '3', type: 'smoothstep', animated: true },
-        { id: 'e3-4', source: '3', target: '4', sourceHandle: 'true', type: 'smoothstep', animated: true },
-        { id: 'e4-5', source: '4', target: '5', type: 'smoothstep', animated: true },
-        { id: 'e5-3', source: '5', target: '3', type: 'smoothstep', animated: true },
-        { id: 'e3-6', source: '3', target: '6', sourceHandle: 'false', type: 'smoothstep', animated: true },
+        { id: 'e1-2', source: '1', target: '2', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'e2-3', source: '2', target: '3', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'e3-4', source: '3', target: '4', sourceHandle: 'true', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'e4-5', source: '4', target: '5', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'e5-3', source: '5', target: '3', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'e3-6', source: '3', target: '6', sourceHandle: 'false', type: 'waypoint', data: { waypoints: [] }, animated: true },
       ];
     } else if (exampleName === 'sum') {
       newNodes = [
@@ -192,11 +192,11 @@ function App() {
         { id: '6', type: 'end', position: { x: 300, y: 690 }, data: { label: 'End' } },
       ];
       newEdges = [
-        { id: 'e1-2', source: '1', target: '2', type: 'smoothstep', animated: true },
-        { id: 'e2-3', source: '2', target: '3', type: 'smoothstep', animated: true },
-        { id: 'e3-4', source: '3', target: '4', type: 'smoothstep', animated: true },
-        { id: 'e4-5', source: '4', target: '5', type: 'smoothstep', animated: true },
-        { id: 'e5-6', source: '5', target: '6', type: 'smoothstep', animated: true },
+        { id: 'e1-2', source: '1', target: '2', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'e2-3', source: '2', target: '3', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'e3-4', source: '3', target: '4', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'e4-5', source: '4', target: '5', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'e5-6', source: '5', target: '6', type: 'waypoint', data: { waypoints: [] }, animated: true },
       ];
     } else if (exampleName === 'evenodd') {
       newNodes = [
@@ -211,13 +211,13 @@ function App() {
         { id: '8', type: 'end', position: { x: 580, y: 570 }, data: { label: 'End' } },
       ];
       newEdges = [
-        { id: 'e1-2', source: '1', target: '2', type: 'smoothstep', animated: true },
-        { id: 'e2-3', source: '2', target: '3', type: 'smoothstep', animated: true },
-        { id: 'e3-4', source: '3', target: '4', type: 'smoothstep', animated: true },
-        { id: 'e4-5', source: '4', target: '5', sourceHandle: 'true', type: 'smoothstep', animated: true },
-        { id: 'e4-6', source: '4', target: '6', sourceHandle: 'false', type: 'smoothstep', animated: true },
-        { id: 'e5-7', source: '5', target: '7', type: 'smoothstep', animated: true },
-        { id: 'e6-8', source: '6', target: '8', type: 'smoothstep', animated: true },
+        { id: 'e1-2', source: '1', target: '2', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'e2-3', source: '2', target: '3', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'e3-4', source: '3', target: '4', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'e4-5', source: '4', target: '5', sourceHandle: 'true', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'e4-6', source: '4', target: '6', sourceHandle: 'false', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'e5-7', source: '5', target: '7', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'e6-8', source: '6', target: '8', type: 'waypoint', data: { waypoints: [] }, animated: true },
       ];
     } else if (exampleName === 'max3') {
       newNodes = [
@@ -236,20 +236,20 @@ function App() {
         { id: '12', type: 'end', position: { x: 450, y: 1020 }, data: { label: 'End' } },
       ];
       newEdges = [
-        { id: 'e1-2', source: '1', target: '2', type: 'smoothstep', animated: true },
-        { id: 'e2-3', source: '2', target: '3', type: 'smoothstep', animated: true },
-        { id: 'e3-4', source: '3', target: '4', type: 'smoothstep', animated: true },
-        { id: 'e4-5', source: '4', target: '5', type: 'smoothstep', animated: true },
-        { id: 'e5-6', source: '5', target: '6', sourceHandle: 'true', type: 'smoothstep', animated: true },
-        { id: 'e5-7', source: '5', target: '7', sourceHandle: 'false', type: 'smoothstep', animated: true },
-        { id: 'e6-8', source: '6', target: '8', sourceHandle: 'true', type: 'smoothstep', animated: true },
-        { id: 'e6-9', source: '6', target: '9', sourceHandle: 'false', type: 'smoothstep', animated: true },
-        { id: 'e7-10', source: '7', target: '10', sourceHandle: 'true', type: 'smoothstep', animated: true },
-        { id: 'e7-11', source: '7', target: '11', sourceHandle: 'false', type: 'smoothstep', animated: true },
-        { id: 'e8-12', source: '8', target: '12', type: 'smoothstep', animated: true },
-        { id: 'e9-12', source: '9', target: '12', type: 'smoothstep', animated: true },
-        { id: 'e10-12', source: '10', target: '12', type: 'smoothstep', animated: true },
-        { id: 'e11-12', source: '11', target: '12', type: 'smoothstep', animated: true },
+        { id: 'e1-2', source: '1', target: '2', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'e2-3', source: '2', target: '3', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'e3-4', source: '3', target: '4', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'e4-5', source: '4', target: '5', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'e5-6', source: '5', target: '6', sourceHandle: 'true', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'e5-7', source: '5', target: '7', sourceHandle: 'false', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'e6-8', source: '6', target: '8', sourceHandle: 'true', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'e6-9', source: '6', target: '9', sourceHandle: 'false', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'e7-10', source: '7', target: '10', sourceHandle: 'true', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'e7-11', source: '7', target: '11', sourceHandle: 'false', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'e8-12', source: '8', target: '12', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'e9-12', source: '9', target: '12', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'e10-12', source: '10', target: '12', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'e11-12', source: '11', target: '12', type: 'waypoint', data: { waypoints: [] }, animated: true },
       ];
     } else if (exampleName === 'factorial') {
       newNodes = [
@@ -264,14 +264,14 @@ function App() {
         { id: '8', type: 'end', position: { x: 630, y: 560 }, data: { label: 'End' } },
       ];
       newEdges = [
-        { id: 'e1-2', source: '1', target: '2', type: 'smoothstep', animated: true },
-        { id: 'e2-3', source: '2', target: '3', type: 'smoothstep', animated: true },
-        { id: 'e3-4', source: '3', target: '4', type: 'smoothstep', animated: true },
-        { id: 'e4-5', source: '4', target: '5', sourceHandle: 'true', type: 'smoothstep', animated: true },
-        { id: 'e5-6', source: '5', target: '6', type: 'smoothstep', animated: true },
-        { id: 'e6-4', source: '6', target: '4', type: 'smoothstep', animated: true },
-        { id: 'e4-7', source: '4', target: '7', sourceHandle: 'false', type: 'smoothstep', animated: true },
-        { id: 'e7-8', source: '7', target: '8', type: 'smoothstep', animated: true },
+        { id: 'e1-2', source: '1', target: '2', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'e2-3', source: '2', target: '3', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'e3-4', source: '3', target: '4', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'e4-5', source: '4', target: '5', sourceHandle: 'true', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'e5-6', source: '5', target: '6', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'e6-4', source: '6', target: '4', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'e4-7', source: '4', target: '7', sourceHandle: 'false', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'e7-8', source: '7', target: '8', type: 'waypoint', data: { waypoints: [] }, animated: true },
       ];
     }
 

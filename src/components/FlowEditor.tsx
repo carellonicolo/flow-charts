@@ -12,6 +12,7 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 
 import { nodeTypes } from '../nodes';
+import { edgeTypes } from '../edges';
 import { validateConnection } from '../utils/edgeValidation';
 import { Toast } from './Toast';
 
@@ -19,9 +20,10 @@ let id = 0;
 const getId = () => `dndnode_${id++}`;
 
 const defaultEdgeOptions = {
-    type: 'smoothstep',
+    type: 'waypoint',
     animated: true,
-    style: { stroke: '#6366f1', strokeWidth: 2 }
+    style: { stroke: '#6366f1', strokeWidth: 2 },
+    data: { waypoints: [] }
 };
 
 const proOptions = { hideAttribution: true };
@@ -55,8 +57,9 @@ const FlowEditorContent = ({
     const [reactFlowInstance, setReactFlowInstance] = React.useState<any>(null);
     const [toastMessage, setToastMessage] = React.useState<string | null>(null);
 
-    // Memoize nodeTypes to prevent React Flow warnings
+    // Memoize nodeTypes and edgeTypes to prevent React Flow warnings
     const memoizedNodeTypes = useMemo(() => nodeTypes, []);
+    const memoizedEdgeTypes = useMemo(() => edgeTypes, []);
 
     const onConnect = useCallback(
         (params: Connection) => {
@@ -76,7 +79,7 @@ const FlowEditorContent = ({
                 return;
             }
 
-            setEdges((eds: Edge[]) => addEdge({ ...params, type: 'smoothstep', animated: true }, eds));
+            setEdges((eds: Edge[]) => addEdge({ ...params, type: 'waypoint', animated: true, data: { waypoints: [] } }, eds));
         },
         [setEdges, edges, nodes],
     );
@@ -195,6 +198,7 @@ const FlowEditorContent = ({
                     onNodeClick={(event, node: Node) => onNodeClick?.(event, node)}
                     onPaneClick={onPaneClick}
                     nodeTypes={memoizedNodeTypes}
+                    edgeTypes={memoizedEdgeTypes}
                     defaultEdgeOptions={defaultEdgeOptions}
                     proOptions={proOptions}
                     panOnDrag={true}

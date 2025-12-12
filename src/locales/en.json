@@ -11,6 +11,7 @@
     "githubRepo": "GitHub Repo",
     "email": "Email",
     "switchLanguage": "Switch language (IT)",
+    "help": "Help",
     "examples": {
       "hello": "🌍 Hello World",
       "counter": "🔁 Loop 1 to 5",
@@ -58,7 +59,14 @@
     "expandTooltip": "Expand console",
     "collapseTooltip": "Collapse console",
     "inputPlaceholderWaiting": "Enter value...",
-    "inputPlaceholderReady": "Ready..."
+    "inputPlaceholderReady": "Ready...",
+    "help": "Console Help"
+  },
+  "consoleHelp": {
+    "title": "Console - Guide",
+    "description": "The console shows the output of your flowchart execution. Here you can see messages from Output blocks, variable values, any errors, and enter data when requested by Input blocks.",
+    "usage": "During execution, the console displays messages in real time. When an Input block requests a value, the input field at the bottom will activate. Type the requested value and press Enter or click the send icon. You can resize the console by dragging the top-left corner.",
+    "example": "Example output:\n• Output: Hello world!\n• Input: x = 5\n• Output: The result is 10\n\nError messages will appear in red, inputs in purple, and outputs in blue."
   },
   "properties": {
     "title": "Properties",
@@ -78,7 +86,13 @@
     "descriptionTitle": "Description",
     "usageTitle": "How to use it",
     "exampleTitle": "Example",
-    "visualExampleTitle": "Visual example"
+    "theoryTitle": "Theory and Fundamentals",
+    "visualExampleTitle": "Visual example",
+    "usageTab": "Usage",
+    "theoryTab": "Theory",
+    "featuresTitle": "🎯 Main Features",
+    "stepsTitle": "📋 Getting Started",
+    "tipsTitle": "Useful Tips"
   },
   "nodes": {
     "start": "Start",
@@ -94,5 +108,12 @@
     "decisionFalse": "False",
     "commentPlaceholder": "Write a comment...",
     "commentDefault": "Double click to edit..."
+  },
+  "help": {
+    "title": "Welcome to Flow Chart",
+    "description": "Flow Chart is an interactive web application for creating and visualizing flowcharts. It allows you to design algorithms visually by dragging and connecting functional blocks. Each diagram can be executed directly in the app to see the result in real time.",
+    "usage": "Drag blocks from the left sidebar into the central canvas. Connect blocks by dragging from one connection point to another. Double-click on a block to edit its properties. Use the 'Run Flow' button to test your algorithm. The console at the bottom right will show the execution output.",
+    "example": "Try loading an example from the 'Load Example' menu to see how it works. Examples include: Hello World, loops, conditions, and mathematical calculations.",
+    "theory": "WHAT ARE FLOWCHARTS\n\nFlowcharts are graphical representations of algorithms and processes. Invented in the 1920s and standardized in the 1960s, they are a fundamental tool for:\n• Designing algorithms before writing code\n• Documenting complex processes clearly\n• Analyzing and optimizing existing procedures\n• Communicating programming logic unambiguously\n\nSTRUCTURE AND COMPONENTS\n\nA flowchart consists of geometric blocks connected by arrows that indicate the execution flow:\n\n1. START/END BLOCK (oval): Marks the beginning and end of the program. Every flowchart must have exactly one start point and at least one end point.\n\n2. PROCESS BLOCK (rectangle): Represents an operation or instruction to execute. Examples: assignments (x = 5), calculations (sum = a + b), mathematical operations.\n\n3. DECISION BLOCK (diamond): Represents a condition that can be true or false. The flow splits into two paths: one for the \"true\" case and one for the \"false\" case. Examples: x > 10, age >= 18, number == 0.\n\n4. INPUT BLOCK (parallelogram): Requests data entry from the user or external sources. Used to acquire information needed by the algorithm.\n\n5. OUTPUT BLOCK (parallelogram): Displays results, messages, or data to the user. Used to communicate processing results.\n\n6. CONNECTORS (arrows): Indicate the direction of execution flow from one block to another. Flow generally proceeds from top to bottom and left to right.\n\nFUNDAMENTAL PRINCIPLES\n\n• SEQUENCE: Instructions are executed one after another in the order they appear.\n\n• SELECTION: Through decision blocks, the program can choose alternative paths based on conditions.\n\n• ITERATION: By connecting blocks to form loops, operations can be repeated multiple times.\n\nPRACTICAL APPLICATIONS\n\nFlowcharts are used in:\n• Computer Science: algorithm design and debugging\n• Engineering: industrial process documentation\n• Business: business procedure mapping\n• Education: teaching programming logic\n• Quality: process analysis and improvement\n\nADVANTAGES\n\n✓ Clear visualization of logic\n✓ Easy error identification\n✓ Effective team communication\n✓ Programming language independent\n✓ Self-explanatory documentation\n\nBEST PRACTICES\n\n• Keep diagrams simple and readable\n• Use meaningful variable names\n• Avoid arrow crossings when possible\n• Comment complex sections\n• Test all possible paths"
   }
 }

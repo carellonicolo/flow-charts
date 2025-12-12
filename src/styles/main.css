@@ -8,6 +8,9 @@
   --glass-border: rgba(255, 255, 255, 0.1);
   --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
 
+  --modal-bg: rgba(30, 41, 59, 0.95);
+  --modal-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+
   --primary-color: #6366f1;
   --primary-hover: #4f46e5;
 
@@ -31,12 +34,29 @@
   /* Lighter border for visibility */
   --glass-shadow: 0 8px 32px 0 rgba(148, 163, 184, 0.15);
   /* Softer shadow */
+
+  --modal-bg: rgba(255, 255, 255, 0.98);
+  --modal-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
 }
 
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+}
+
+/* Animazione bounce per il badge BETA */
+@keyframes beta-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.beta-badge {
+  animation: beta-bounce 1.5s ease-in-out infinite;
 }
 
 body {
