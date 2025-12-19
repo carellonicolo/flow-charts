@@ -406,8 +406,6 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  transform-style: preserve-3d;
-  /* Can encourage higher quality rasterization */
 }
 
 /* Force high quality rendering for all child elements */
@@ -426,13 +424,12 @@ body {
 
 /* Global scale quality improvement */
 .react-flow__viewport {
-  transform-style: preserve-3d;
-  backface-visibility: hidden;
+  /* Remove transform-style and backface-visibility to prevent blurry textures on scale */
 }
 
 /* Ensure transforms maintain quality */
 .react-flow__viewport {
-  image-rendering: -webkit-optimize-contrast;
+  image-rendering: auto;
 }
 
 .react-flow__node.dragging {

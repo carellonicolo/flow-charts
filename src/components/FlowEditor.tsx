@@ -211,8 +211,9 @@ const FlowEditorContent = ({
                     fitViewOptions={{
                         padding: 0.2,
                         minZoom: 0.5,
-                        maxZoom: 1.5
+                        maxZoom: 4.0
                     }}
+                    maxZoom={4.0}
                 >
                     <Background color={bgOptions.color} gap={bgOptions.gap} size={bgOptions.size} />
                 </ReactFlow>
