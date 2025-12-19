@@ -1,4 +1,4 @@
-import { Menu, Play, Square, Terminal, Sun, Moon, Github, Globe, ChevronDown, HelpCircle, Library, Trash2, BookOpen, Star, Brain, Trophy } from 'lucide-react';
+import { Menu, Play, Square, Terminal, Sun, Moon, Github, Globe, ChevronDown, HelpCircle, Library, Trash2, BookOpen, Star, Brain, Trophy, Palette } from 'lucide-react';
 import { useTranslation, type Language } from '../i18n/i18nContext';
 import { useState, useRef, useEffect } from 'react';
 import { HelpModal } from './HelpModal';
@@ -16,6 +16,8 @@ interface HeaderProps {
   onToggleConsole: () => void;
   onLoadExample: (example: string) => void;
   onStartExercise: (description: string) => void;
+  colorTheme: string;
+  onColorThemeChange: (theme: string) => void;
 }
 
 export const Header = ({
@@ -29,16 +31,20 @@ export const Header = ({
   onToggleConsole,
   onLoadExample,
   onStartExercise,
+  colorTheme,
+  onColorThemeChange,
 }: HeaderProps) => {
   const { t, language, changeLanguage } = useTranslation();
   const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
   const [isExampleDropdownOpen, setIsExampleDropdownOpen] = useState(false);
   const [isExerciseDropdownOpen, setIsExerciseDropdownOpen] = useState(false);
+  const [isColorDropdownOpen, setIsColorDropdownOpen] = useState(false);
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
   const languageDropdownRef = useRef<HTMLDivElement>(null);
   const exampleDropdownRef = useRef<HTMLDivElement>(null);
   const exerciseDropdownRef = useRef<HTMLDivElement>(null);
+  const colorDropdownRef = useRef<HTMLDivElement>(null);
 
   const languages: { code: Language; label: string; flag: string }[] = [
     { code: 'it', label: 'Italiano', flag: '🇮🇹' },
@@ -62,6 +68,9 @@ export const Header = ({
       }
       if (exerciseDropdownRef.current && !exerciseDropdownRef.current.contains(target)) {
         setIsExerciseDropdownOpen(false);
+      }
+      if (colorDropdownRef.current && !colorDropdownRef.current.contains(target)) {
+        setIsColorDropdownOpen(false);
       }
     };
 
@@ -172,6 +181,81 @@ export const Header = ({
         >
           {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
         </button>
+
+        {/* Color Theme Selector */}
+        <div ref={colorDropdownRef} style={{ position: 'relative' }}>
+          <button
+            onClick={() => setIsColorDropdownOpen(!isColorDropdownOpen)}
+            className={`btn btn-icon ${isColorDropdownOpen ? 'active' : ''}`}
+            title={language === 'it' ? 'Cambia Tema Colore' : 'Change Color Theme'}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+          >
+            <Palette size={20} color={isColorDropdownOpen ? 'var(--primary-color)' : 'currentColor'} />
+            <ChevronDown size={14} style={{
+              transition: 'transform 0.2s',
+              transform: isColorDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)'
+            }} />
+          </button>
+
+          {isColorDropdownOpen && (
+            <div
+              className="glass-panel"
+              style={{
+                position: 'absolute',
+                top: 'calc(100% + 8px)',
+                right: 0,
+                minWidth: '180px',
+                padding: '8px',
+                zIndex: 1000,
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+                animation: 'slideInDown 0.2s ease-out'
+              }}
+            >
+              <div style={{ padding: '8px 12px', fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 'bold' }}>
+                {language === 'it' ? 'Tema Colore' : 'Color Theme'}
+              </div>
+              {[
+                { id: 'indigo', color: '#6366f1', label: { it: 'Indaco', en: 'Indigo' } },
+                { id: 'emerald', color: '#10b981', label: { it: 'Smeraldo', en: 'Emerald' } },
+                { id: 'rose', color: '#f43f5e', label: { it: 'Rosa', en: 'Rose' } },
+                { id: 'amber', color: '#f59e0b', label: { it: 'Ambra', en: 'Amber' } },
+                { id: 'cyan', color: '#06b6d4', label: { it: 'Ciano', en: 'Cyan' } }
+              ].map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => {
+                    onColorThemeChange(c.id);
+                    setIsColorDropdownOpen(false);
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    background: colorTheme === c.id ? 'rgba(99, 102, 241, 0.1)' : 'transparent',
+                    border: 'none',
+                    borderRadius: '8px',
+                    color: colorTheme === c.id ? c.color : 'var(--text-color)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    fontSize: '0.9rem',
+                    transition: 'all 0.2s',
+                    textAlign: 'left'
+                  }}
+                >
+                  <div style={{
+                    width: '12px',
+                    height: '12px',
+                    borderRadius: '50%',
+                    background: c.color,
+                    boxShadow: colorTheme === c.id ? `0 0 8px ${c.color}` : 'none'
+                  }} />
+                  {language === 'it' ? c.label.it : c.label.en}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Examples Dropdown */}
         <div ref={exampleDropdownRef} style={{ position: 'relative' }}>

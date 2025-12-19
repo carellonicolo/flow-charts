@@ -11,7 +11,13 @@ import { validateFlowSyntax, formatValidationMessage } from './utils/flowValidat
 import './styles/main.css';
 
 function App() {
-  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    const saved = localStorage.getItem('theme');
+    return (saved as 'light' | 'dark') || 'dark';
+  });
+  const [colorTheme, setColorTheme] = useState<string>(() => {
+    return localStorage.getItem('color-theme') || 'indigo';
+  });
   const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
   const [isWaitingForInput, setIsWaitingForInput] = useState(false);
@@ -35,7 +41,12 @@ function App() {
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
   }, [theme]);
+
+  useEffect(() => {
+    localStorage.setItem('color-theme', colorTheme);
+  }, [colorTheme]);
 
   const handleStop = () => {
     if (executorRef.current) {
@@ -292,10 +303,12 @@ function App() {
 
 
   return (
-    <div className="app-container" data-theme={theme}>
+    <div className="app-container" data-theme={theme} data-color-theme={colorTheme}>
       <Header
         theme={theme}
         onToggleTheme={toggleTheme}
+        colorTheme={colorTheme}
+        onColorThemeChange={setColorTheme}
         isExecuting={isExecuting}
         onRun={handleRun}
         onClear={handleClear}
