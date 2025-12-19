@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Settings, X } from 'lucide-react';
-import type { Node } from 'reactflow';
+import { NodeToolbar, type Node, Position } from 'reactflow';
 import { useTranslation } from '../i18n/i18nContext';
 
 interface PropertiesPanelProps {
@@ -62,33 +62,38 @@ export const PropertiesPanel = ({ selectedNode, onUpdateNode, onClose }: Propert
     if (!selectedNode) return null;
 
     return (
-        <div className="glass-panel" style={{
-            position: 'absolute',
-            top: '20px',
-            right: '20px',
-            width: '300px',
-            padding: '20px',
-            zIndex: 20,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '15px'
-        }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--glass-border)', paddingBottom: '10px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Settings size={18} />
-                    <h3 style={{ margin: 0, fontSize: '1.1rem' }}>{t('properties.title')}</h3>
+        <NodeToolbar
+            nodeId={selectedNode.id}
+            position={Position.Right}
+            offset={20}
+            style={{ zIndex: 100 }}
+        >
+            <div className="glass-panel properties-toolbar" style={{
+                width: '320px',
+                padding: '20px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '15px',
+                boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+                border: '1px solid var(--glass-border)',
+                animation: 'fadeIn 0.2s ease-out'
+            }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--glass-border)', paddingBottom: '10px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Settings size={18} />
+                        <h3 style={{ margin: 0, fontSize: '1.1rem' }}>{t('properties.title')}</h3>
+                    </div>
+                    <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}>
+                        <X size={18} />
+                    </button>
                 </div>
-                <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}>
-                    <X size={18} />
-                </button>
-            </div>
 
-            <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-                {t('properties.typeLabel')}<span style={{ fontWeight: 'bold', color: 'var(--text-color)', textTransform: 'capitalize' }}>{selectedNode.type}</span>
-            </div>
+                <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                    {t('properties.typeLabel')}<span style={{ fontWeight: 'bold', color: 'var(--text-color)', textTransform: 'capitalize' }}>{selectedNode.type}</span>
+                </div>
 
-            {/* Common Label Field (optional, maybe hidden for specific types if we want to enforce structure) */}
-            {/* <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                {/* Common Label Field (optional, maybe hidden for specific types if we want to enforce structure) */}
+                {/* <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
         <label style={{ fontSize: '0.8rem' }}>Label</label>
         <input 
           type="text" 
@@ -98,57 +103,58 @@ export const PropertiesPanel = ({ selectedNode, onUpdateNode, onClose }: Propert
         />
       </div> */}
 
-            {selectedNode.type === 'process' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                    <label style={{ fontSize: '0.8rem' }}>{t('properties.expressionLabel')}</label>
-                    <input
-                        type="text"
-                        value={expression}
-                        onChange={(e) => setExpression(e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        placeholder={t('properties.expressionPlaceholder')}
-                        style={{ padding: '8px', borderRadius: '4px', border: '1px solid var(--glass-border)', background: 'rgba(0,0,0,0.2)', color: 'var(--text-color)' }}
-                    />
-                </div>
-            )}
+                {selectedNode.type === 'process' && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                        <label style={{ fontSize: '0.8rem' }}>{t('properties.expressionLabel')}</label>
+                        <input
+                            type="text"
+                            value={expression}
+                            onChange={(e) => setExpression(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            placeholder={t('properties.expressionPlaceholder')}
+                            style={{ padding: '8px', borderRadius: '4px', border: '1px solid var(--glass-border)', background: 'rgba(0,0,0,0.2)', color: 'var(--text-color)' }}
+                        />
+                    </div>
+                )}
 
-            {selectedNode.type === 'decision' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                    <label style={{ fontSize: '0.8rem' }}>{t('properties.conditionLabel')}</label>
-                    <input
-                        type="text"
-                        value={condition}
-                        onChange={(e) => setCondition(e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        placeholder={t('properties.conditionPlaceholder')}
-                        style={{ padding: '8px', borderRadius: '4px', border: '1px solid var(--glass-border)', background: 'rgba(0,0,0,0.2)', color: 'var(--text-color)' }}
-                    />
-                </div>
-            )}
+                {selectedNode.type === 'decision' && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                        <label style={{ fontSize: '0.8rem' }}>{t('properties.conditionLabel')}</label>
+                        <input
+                            type="text"
+                            value={condition}
+                            onChange={(e) => setCondition(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            placeholder={t('properties.conditionPlaceholder')}
+                            style={{ padding: '8px', borderRadius: '4px', border: '1px solid var(--glass-border)', background: 'rgba(0,0,0,0.2)', color: 'var(--text-color)' }}
+                        />
+                    </div>
+                )}
 
-            {(selectedNode.type === 'input' || selectedNode.type === 'output') && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                    <label style={{ fontSize: '0.8rem' }}>{t('properties.variableLabel')}</label>
-                    <input
-                        type="text"
-                        value={variableName}
-                        onChange={(e) => setVariableName(e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        placeholder={t('properties.variablePlaceholder')}
-                        style={{ padding: '8px', borderRadius: '4px', border: '1px solid var(--glass-border)', background: 'rgba(0,0,0,0.2)', color: 'var(--text-color)' }}
-                    />
-                </div>
-            )}
+                {(selectedNode.type === 'input' || selectedNode.type === 'output') && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                        <label style={{ fontSize: '0.8rem' }}>{t('properties.variableLabel')}</label>
+                        <input
+                            type="text"
+                            value={variableName}
+                            onChange={(e) => setVariableName(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            placeholder={t('properties.variablePlaceholder')}
+                            style={{ padding: '8px', borderRadius: '4px', border: '1px solid var(--glass-border)', background: 'rgba(0,0,0,0.2)', color: 'var(--text-color)' }}
+                        />
+                    </div>
+                )}
 
-            {(selectedNode.type === 'start' || selectedNode.type === 'end') && (
-                <div style={{ fontSize: '0.9rem', color: '#94a3b8', fontStyle: 'italic' }}>
-                    {t('properties.noProperties')}
-                </div>
-            )}
+                {(selectedNode.type === 'start' || selectedNode.type === 'end') && (
+                    <div style={{ fontSize: '0.9rem', color: '#94a3b8', fontStyle: 'italic' }}>
+                        {t('properties.noProperties')}
+                    </div>
+                )}
 
-            <button className="btn btn-primary" onClick={handleSave} style={{ marginTop: '10px' }}>
-                {t('properties.updateButton')}
-            </button>
-        </div>
+                <button className="btn btn-primary" onClick={handleSave} style={{ marginTop: '10px' }}>
+                    {t('properties.updateButton')}
+                </button>
+            </div>
+        </NodeToolbar>
     );
 };

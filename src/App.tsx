@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNodesState, useEdgesState } from 'reactflow';
 import { FlowEditor } from './components/FlowEditor';
 import { Console } from './components/Console';
-import { PropertiesPanel } from './components/PropertiesPanel';
 import { Sidebar, type HelpContent } from './components/Sidebar';
 import { Header } from './components/Header';
 import { HelpModal } from './components/HelpModal';
@@ -14,7 +13,6 @@ import './styles/main.css';
 function App() {
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
   const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(null);
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
   const [isWaitingForInput, setIsWaitingForInput] = useState(false);
   const [isExecuting, setIsExecuting] = useState(false);
@@ -123,12 +121,7 @@ function App() {
     setIsWaitingForInput(false);
   };
 
-  const onNodeClick = (_: React.MouseEvent, node: any) => {
-    setSelectedNodeId(node.id);
-  };
-
   const onPaneClick = () => {
-    setSelectedNodeId(null);
     // Close mobile panels when clicking on the canvas
     if (window.innerWidth <= 768) {
       setIsSidebarOpen(false);
@@ -146,6 +139,24 @@ function App() {
     setHelpModalContent(content);
     setHelpModalOpen(true);
     console.log('✅ Help modal state aggiornato');
+  };
+
+  const handleClear = () => {
+    if (isExecuting) handleStop();
+    setNodes([]);
+    setEdges([]);
+    setLogs(['🧹 Area di lavoro ripulita']);
+  };
+
+  const handleStartExercise = (description: string) => {
+    handleClear();
+    const newNode = {
+      id: `ex-comment-${Date.now()}`,
+      type: 'comment',
+      position: { x: 50, y: 50 },
+      data: { label: `🎯 ESERCIZIO:\n${description}` }
+    };
+    setNodes([newNode]);
   };
 
   const loadExample = (exampleName: string) => {
@@ -253,25 +264,25 @@ function App() {
       ];
     } else if (exampleName === 'factorial') {
       newNodes = [
-        { id: 'c1', type: 'comment', position: { x: 50, y: 80 }, data: { label: 'SCOPO:\nFattoriale n!\n\nSCELTE:\n- risultato=1\n- Loop n>1\n- Moltiplica*n\n- Decrementa n-1' } },
-        { id: '1', type: 'start', position: { x: 350, y: 50 }, data: { label: 'Start' } },
-        { id: '2', type: 'input', position: { x: 350, y: 170 }, data: { label: 'n', variableName: 'n' } },
-        { id: '3', type: 'process', position: { x: 350, y: 280 }, data: { label: 'risultato = 1', variableName: 'risultato', expression: '1' } },
-        { id: '4', type: 'decision', position: { x: 350, y: 410 }, data: { label: 'n > 1', condition: 'n > 1' } },
-        { id: '5', type: 'process', position: { x: 350, y: 590 }, data: { label: 'ris = ris * n', variableName: 'risultato', expression: 'risultato * n' } },
-        { id: '6', type: 'process', position: { x: 350, y: 710 }, data: { label: 'n = n - 1', variableName: 'n', expression: 'n - 1' } },
-        { id: '7', type: 'output', position: { x: 630, y: 410 }, data: { label: 'risultato', expression: 'risultato' } },
-        { id: '8', type: 'end', position: { x: 630, y: 560 }, data: { label: 'End' } },
+        { id: 'c1', type: 'comment', position: { x: 50, y: 80 }, data: { label: 'SCOPO:\nFattoriale n!\n\nSCELTE:\n- risultato=1\n- Loop n>1\n- calcola ris * n\n- decrementa n' } },
+        { id: 'f1', type: 'start', position: { x: 350, y: 50 }, data: { label: 'Start' } },
+        { id: 'f2', type: 'input', position: { x: 350, y: 170 }, data: { label: 'Numero n', variableName: 'n' } },
+        { id: 'f3', type: 'process', position: { x: 350, y: 280 }, data: { label: 'risultato = 1', variableName: 'risultato', expression: '1' } },
+        { id: 'f4', type: 'decision', position: { x: 350, y: 410 }, data: { label: 'n > 1?', condition: 'n > 1' } },
+        { id: 'f5', type: 'process', position: { x: 350, y: 590 }, data: { label: 'ris = ris * n', variableName: 'risultato', expression: 'risultato * n' } },
+        { id: 'f6', type: 'process', position: { x: 350, y: 710 }, data: { label: 'n = n - 1', variableName: 'n', expression: 'n - 1' } },
+        { id: 'f7', type: 'output', position: { x: 630, y: 410 }, data: { label: 'risultato', expression: 'risultato' } },
+        { id: 'f8', type: 'end', position: { x: 630, y: 560 }, data: { label: 'End' } },
       ];
       newEdges = [
-        { id: 'e1-2', source: '1', target: '2', type: 'waypoint', data: { waypoints: [] }, animated: true },
-        { id: 'e2-3', source: '2', target: '3', type: 'waypoint', data: { waypoints: [] }, animated: true },
-        { id: 'e3-4', source: '3', target: '4', type: 'waypoint', data: { waypoints: [] }, animated: true },
-        { id: 'e4-5', source: '4', target: '5', sourceHandle: 'true', type: 'waypoint', data: { waypoints: [] }, animated: true },
-        { id: 'e5-6', source: '5', target: '6', type: 'waypoint', data: { waypoints: [] }, animated: true },
-        { id: 'e6-4', source: '6', target: '4', type: 'waypoint', data: { waypoints: [] }, animated: true },
-        { id: 'e4-7', source: '4', target: '7', sourceHandle: 'false', type: 'waypoint', data: { waypoints: [] }, animated: true },
-        { id: 'e7-8', source: '7', target: '8', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'fe1-2', source: 'f1', target: 'f2', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'fe2-3', source: 'f2', target: 'f3', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'fe3-4', source: 'f3', target: 'f4', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'fe4-5', source: 'f4', target: 'f5', sourceHandle: 'true', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'fe5-6', source: 'f5', target: 'f6', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'fe6-4', source: 'f6', target: 'f4', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'fe4-7', source: 'f4', target: 'f7', sourceHandle: 'false', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'fe7-8', source: 'f7', target: 'f8', type: 'waypoint', data: { waypoints: [] }, animated: true },
       ];
     }
 
@@ -279,7 +290,6 @@ function App() {
     setEdges(newEdges);
   };
 
-  const selectedNode = nodes.find(n => n.id === selectedNodeId) || null;
 
   return (
     <div className="app-container" data-theme={theme}>
@@ -288,10 +298,12 @@ function App() {
         onToggleTheme={toggleTheme}
         isExecuting={isExecuting}
         onRun={handleRun}
+        onClear={handleClear}
         onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         isConsoleOpen={isConsoleOpen}
         onToggleConsole={() => setIsConsoleOpen(!isConsoleOpen)}
         onLoadExample={loadExample}
+        onStartExercise={handleStartExercise}
       />
 
       <div className="main-content">
@@ -308,11 +320,10 @@ function App() {
             setEdges={setEdges}
             setNodes={setNodes}
             highlightedNodeId={highlightedNodeId}
-            onNodeClick={onNodeClick}
             onPaneClick={onPaneClick}
             theme={theme}
           />
-          
+
           <div className={`console-container ${isConsoleOpen ? 'open' : ''}`}>
             <Console
               ref={consoleRef}
@@ -323,21 +334,6 @@ function App() {
           </div>
         </div>
       </div>
-      {selectedNode && selectedNode.type !== 'comment' && (
-        <PropertiesPanel
-          selectedNode={selectedNode}
-          onClose={() => setSelectedNodeId(null)}
-          onUpdateNode={(id: string, data: any) => {
-            setNodes((nds) => nds.map((node) => {
-              if (node.id === id) {
-                return { ...node, data: { ...node.data, ...data } };
-              }
-              return node;
-            }));
-            setSelectedNodeId(null);
-          }}
-        />
-      )}
       {validationError && (
         <Toast
           message={validationError.split('\n')[0]}

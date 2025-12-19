@@ -16,8 +16,16 @@ export interface HelpContent {
     description: string;
     usage: string;
     example: string;
+    theory?: string;
+    theoryDescription?: string;
+    theoryFeatures?: Array<{ icon: string; title: string; description: string; color: string }>;
+    theorySteps?: Array<{ number: number; title: string; description: string }>;
+    theoryTips?: Array<{ text: string; type: 'success' | 'info' | 'warning' }>;
     image?: string;
     preview?: React.ReactNode;
+    features?: Array<{ icon: string; title: string; description: string; color: string }>;
+    steps?: Array<{ number: number; title: string; description: string }>;
+    tips?: Array<{ text: string; type: 'success' | 'info' | 'warning' }>;
 }
 
 const SidebarItem = ({ type, label, description, icon: Icon, color, helpContent, onHelp }: any) => {

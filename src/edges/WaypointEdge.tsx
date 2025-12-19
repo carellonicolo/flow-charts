@@ -5,7 +5,7 @@
 
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { type EdgeProps, BaseEdge, useReactFlow } from 'reactflow';
-import { Trash2 } from 'lucide-react';
+import { Trash } from 'lucide-react';
 import { type WaypointEdgeData, type Waypoint } from '../types/waypoint';
 
 /**
@@ -152,6 +152,7 @@ const TrashIcon: React.FC<TrashIconProps> = ({ position, onDelete }) => {
           e.stopPropagation();
           onDelete();
         }}
+        className="trash-icon-container"
         style={{
           width: '28px',
           height: '28px',
@@ -166,7 +167,10 @@ const TrashIcon: React.FC<TrashIconProps> = ({ position, onDelete }) => {
           boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
         }}
       >
-        <Trash2 size={14} color="#ef4444" />
+        <Trash
+          size={16}
+          color="#ef4444"
+        />
       </div>
     </foreignObject>
   );
@@ -197,8 +201,8 @@ export const WaypointEdge: React.FC<EdgeProps<WaypointEdgeData>> = ({
       // Check if click is outside waypoint circles and trash icon
       const target = e.target as Element;
       const isWaypointOrTrash = target.closest('.waypoint-circle') ||
-                                target.closest('foreignObject') ||
-                                target.classList?.contains('waypoint-circle');
+        target.closest('foreignObject') ||
+        target.classList?.contains('waypoint-circle');
 
       if (!isWaypointOrTrash && selectedWaypoint) {
         setSelectedWaypoint(null);

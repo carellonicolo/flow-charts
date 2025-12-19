@@ -15,6 +15,7 @@ import { nodeTypes } from '../nodes';
 import { edgeTypes } from '../edges';
 import { validateConnection } from '../utils/edgeValidation';
 import { Toast } from './Toast';
+import { PropertiesPanel } from './PropertiesPanel';
 
 let id = 0;
 const getId = () => `dndnode_${id++}`;
@@ -219,6 +220,17 @@ const FlowEditorContent = ({
                     <Background color={bgOptions.color} gap={bgOptions.gap} size={bgOptions.size} />
                 </ReactFlow>
             </div>
+            {styledNodes.find(n => n.selected) && (
+                <PropertiesPanel
+                    selectedNode={styledNodes.find(n => n.selected) || null}
+                    onClose={() => {
+                        setNodes((nds: Node[]) => nds.map(n => ({ ...n, selected: false })));
+                    }}
+                    onUpdateNode={(id: string, data: any) => {
+                        handleNodeDataChange(id, data);
+                    }}
+                />
+            )}
             {toastMessage && (
                 <Toast
                     message={toastMessage}
