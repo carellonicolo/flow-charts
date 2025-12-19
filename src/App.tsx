@@ -1,5 +1,7 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useNodesState, useEdgesState } from 'reactflow';
+import { useState, useRef, useEffect } from 'react';
+import { ReactFlowProvider, useNodesState, useEdgesState } from 'reactflow';
+import { toPng, toJpeg, toBlob } from 'html-to-image';
+import { jsPDF } from 'jspdf';
 import { FlowEditor } from './components/FlowEditor';
 import { Console } from './components/Console';
 import { Sidebar, type HelpContent } from './components/Sidebar';
@@ -10,7 +12,7 @@ import { Executor } from './engine/Executor';
 import { validateFlowSyntax, formatValidationMessage } from './utils/flowValidation';
 import './styles/main.css';
 
-function App() {
+function AppContent() {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const saved = localStorage.getItem('theme');
     return (saved as 'light' | 'dark') || 'dark';
@@ -158,6 +160,59 @@ function App() {
     setEdges([]);
     setLogs(['🧹 Area di lavoro ripulita']);
   };
+
+  const handleExport = async (format: 'pdf' | 'png' | 'jpeg') => {
+    const flowElement = document.querySelector('.reactflow-wrapper') as HTMLElement;
+    if (!flowElement) return;
+
+    setLogs(prev => [...prev, `⚙️ Generazione ${format.toUpperCase()} in corso...`]);
+
+    try {
+      const options = {
+        backgroundColor: theme === 'dark' ? '#0f172a' : '#f1f5f9',
+        pixelRatio: 1.5,
+        cacheBust: true,
+      };
+
+      if (format === 'pdf' || format === 'png') {
+        const dataUrl = await toPng(flowElement, options);
+
+        if (format === 'pdf') {
+          const pdf = new jsPDF({
+            orientation: 'landscape',
+            unit: 'px',
+            format: [flowElement.offsetWidth, flowElement.offsetHeight]
+          });
+          pdf.addImage(dataUrl, 'PNG', 0, 0, flowElement.offsetWidth, flowElement.offsetHeight);
+          pdf.save('flow-chart.pdf');
+        } else {
+          const link = document.createElement('a');
+          link.href = dataUrl;
+          link.download = 'flow-chart.png';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }
+      } else if (format === 'jpeg') {
+        const dataUrl = await toJpeg(flowElement, { ...options, quality: 0.9 });
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = 'flow-chart.jpg';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+
+      setLogs(prev => [...prev, `📄 ${format.toUpperCase()} scaricato con successo`]);
+    } catch (error) {
+      console.error(`Errore durante il download del ${format.toUpperCase()}:`, error);
+      setLogs(prev => [...prev, `❌ Errore durante il download del ${format.toUpperCase()}`]);
+    }
+  };
+
+  const handleDownloadPDF = () => handleExport('pdf');
+  const handleDownloadPNG = () => handleExport('png');
+  const handleDownloadJPEG = () => handleExport('jpeg');
 
   const handleStartExercise = (description: string) => {
     handleClear();
@@ -311,6 +366,9 @@ function App() {
         onColorThemeChange={setColorTheme}
         isExecuting={isExecuting}
         onRun={handleRun}
+        onDownloadPDF={handleDownloadPDF}
+        onDownloadPNG={handleDownloadPNG}
+        onDownloadJPEG={handleDownloadJPEG}
         onClear={handleClear}
         onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         isConsoleOpen={isConsoleOpen}
@@ -361,6 +419,14 @@ function App() {
         content={helpModalContent}
       />
     </div>
+  );
+}
+
+function App() {
+  return (
+    <ReactFlowProvider>
+      <AppContent />
+    </ReactFlowProvider>
   );
 }
 

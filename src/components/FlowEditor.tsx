@@ -42,7 +42,7 @@ interface FlowEditorProps {
     theme?: 'dark' | 'light';
 }
 
-const FlowEditorContent = ({
+export const FlowEditor = ({
     nodes,
     edges,
     onNodesChange,
@@ -236,13 +236,5 @@ const FlowEditorContent = ({
                 />
             )}
         </div>
-    );
-};
-
-export const FlowEditor = (props: FlowEditorProps) => {
-    return (
-        <ReactFlowProvider>
-            <FlowEditorContent {...props} />
-        </ReactFlowProvider>
     );
 };

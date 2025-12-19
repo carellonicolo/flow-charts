@@ -1,4 +1,4 @@
-import { Menu, Play, Square, Terminal, Sun, Moon, Github, Globe, ChevronDown, HelpCircle, Library, Trash2, BookOpen, Star, Brain, Trophy, Palette } from 'lucide-react';
+import { Menu, Play, Square, Terminal, Sun, Moon, Github, Globe, ChevronDown, HelpCircle, Library, Trash2, BookOpen, Star, Brain, Trophy, Palette, Download } from 'lucide-react';
 import { useTranslation, type Language } from '../i18n/i18nContext';
 import { useState, useRef, useEffect } from 'react';
 import { HelpModal } from './HelpModal';
@@ -10,6 +10,9 @@ interface HeaderProps {
   onToggleTheme: () => void;
   isExecuting: boolean;
   onRun: () => void;
+  onDownloadPDF?: () => void;
+  onDownloadPNG?: () => void;
+  onDownloadJPEG?: () => void;
   onClear?: () => void;
   onToggleSidebar: () => void;
   isConsoleOpen: boolean;
@@ -25,6 +28,9 @@ export const Header = ({
   onToggleTheme,
   isExecuting,
   onRun,
+  onDownloadPDF,
+  onDownloadPNG,
+  onDownloadJPEG,
   onClear,
   onToggleSidebar,
   isConsoleOpen,
@@ -39,12 +45,14 @@ export const Header = ({
   const [isExampleDropdownOpen, setIsExampleDropdownOpen] = useState(false);
   const [isExerciseDropdownOpen, setIsExerciseDropdownOpen] = useState(false);
   const [isColorDropdownOpen, setIsColorDropdownOpen] = useState(false);
+  const [isDownloadDropdownOpen, setIsDownloadDropdownOpen] = useState(false);
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
   const languageDropdownRef = useRef<HTMLDivElement>(null);
   const exampleDropdownRef = useRef<HTMLDivElement>(null);
   const exerciseDropdownRef = useRef<HTMLDivElement>(null);
   const colorDropdownRef = useRef<HTMLDivElement>(null);
+  const downloadDropdownRef = useRef<HTMLDivElement>(null);
 
   const languages: { code: Language; label: string; flag: string }[] = [
     { code: 'it', label: 'Italiano', flag: '🇮🇹' },
@@ -71,6 +79,9 @@ export const Header = ({
       }
       if (colorDropdownRef.current && !colorDropdownRef.current.contains(target)) {
         setIsColorDropdownOpen(false);
+      }
+      if (downloadDropdownRef.current && !downloadDropdownRef.current.contains(target)) {
+        setIsDownloadDropdownOpen(false);
       }
     };
 
@@ -137,6 +148,50 @@ export const Header = ({
         <div className="command-capsule-wrapper">
           <div className="command-capsule">
             <div className={`status-led ${isExecuting ? 'active' : ''}`} />
+
+            <div ref={downloadDropdownRef} className="download-wrapper">
+              <button
+                className={`capsule-btn secondary ${isDownloadDropdownOpen ? 'active' : ''}`}
+                onClick={() => setIsDownloadDropdownOpen(!isDownloadDropdownOpen)}
+                title={language === 'it' ? 'Esporta Flowchart' : 'Export Flowchart'}
+                disabled={isExecuting}
+              >
+                <Download size={16} />
+                <ChevronDown size={12} style={{
+                  opacity: 0.5,
+                  transform: isDownloadDropdownOpen ? 'rotate(180deg)' : 'none',
+                  transition: 'transform 0.2s ease'
+                }} />
+              </button>
+
+              {isDownloadDropdownOpen && (
+                <div className="download-dropdown">
+                  <button className="dropdown-item" onClick={() => { onDownloadPDF?.(); setIsDownloadDropdownOpen(false); }}>
+                    <div className="item-icon pdf">PDF</div>
+                    <div className="item-info">
+                      <span className="item-label">Documento PDF</span>
+                      <span className="item-desc">{language === 'it' ? 'Migliore per la stampa' : 'Best for printing'}</span>
+                    </div>
+                  </button>
+                  <button className="dropdown-item" onClick={() => { onDownloadPNG?.(); setIsDownloadDropdownOpen(false); }}>
+                    <div className="item-icon png">PNG</div>
+                    <div className="item-info">
+                      <span className="item-label">Immagine PNG</span>
+                      <span className="item-desc">{language === 'it' ? 'Sfondo trasparente' : 'Transparent background'}</span>
+                    </div>
+                  </button>
+                  <button className="dropdown-item" onClick={() => { onDownloadJPEG?.(); setIsDownloadDropdownOpen(false); }}>
+                    <div className="item-icon jpeg">JPEG</div>
+                    <div className="item-info">
+                      <span className="item-label">Immagine JPEG</span>
+                      <span className="item-desc">{language === 'it' ? 'File leggero/compatto' : 'Smaller file size'}</span>
+                    </div>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="capsule-divider" />
 
             <button
               className={`capsule-btn primary ${isExecuting ? 'executing' : ''}`}
