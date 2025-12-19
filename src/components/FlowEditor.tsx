@@ -23,7 +23,7 @@ const getId = () => `dndnode_${id++}`;
 const defaultEdgeOptions = {
     type: 'waypoint',
     animated: true,
-    style: { stroke: '#6366f1', strokeWidth: 2 },
+    style: { stroke: 'var(--primary-color)', strokeWidth: 2 },
     data: { waypoints: [] }
 };
 
@@ -51,8 +51,7 @@ const FlowEditorContent = ({
     setNodes,
     highlightedNodeId,
     onNodeClick,
-    onPaneClick,
-    theme = 'dark'
+    onPaneClick
 }: FlowEditorProps) => {
     const reactFlowWrapper = useRef<HTMLDivElement>(null);
     const [reactFlowInstance, setReactFlowInstance] = React.useState<any>(null);
@@ -165,8 +164,8 @@ const FlowEditorContent = ({
         },
         style: {
             ...node.style,
-            border: node.id === highlightedNodeId ? '2px solid #ec4899' : 'none',
-            boxShadow: node.id === highlightedNodeId ? '0 0 20px #ec4899' : 'none'
+            border: node.id === highlightedNodeId ? '2px solid var(--primary-color)' : 'none',
+            boxShadow: node.id === highlightedNodeId ? '0 0 20px var(--theme-glow)' : 'none'
         }
     }));
 
@@ -175,14 +174,12 @@ const FlowEditorContent = ({
         ...edge,
         style: {
             ...edge.style,
-            stroke: edge.selected ? '#ec4899' : '#6366f1',
+            stroke: edge.selected ? 'var(--theme-accent)' : 'var(--primary-color)',
             strokeWidth: edge.selected ? 3 : 2
         }
     }));
 
-    const bgOptions = theme === 'dark'
-        ? { color: '#334155', gap: 20, size: 1 } // Darker, subtle dots for dark mode
-        : { color: '#cbd5e1', gap: 20, size: 1 }; // Very light gray dots for light mode
+    const bgOptions = { color: 'var(--grid-color)', gap: 20, size: 1 };
 
     return (
         <div className="dndflow" style={{ width: '100%', height: '100%', display: 'flex' }}>
