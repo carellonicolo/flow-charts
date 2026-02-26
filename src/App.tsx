@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { ReactFlowProvider, useNodesState, useEdgesState } from 'reactflow';
-import { toPng, toJpeg, toBlob } from 'html-to-image';
+import { toPng, toJpeg } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 import { FlowEditor } from './components/FlowEditor';
 import { Console } from './components/Console';
