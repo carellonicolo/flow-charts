@@ -13,6 +13,7 @@ import 'reactflow/dist/style.css';
 import { nodeTypes } from '../nodes';
 import { edgeTypes } from '../edges';
 import { validateConnection } from '../utils/edgeValidation';
+import { defaultDataForType } from '../types/flow';
 import { Toast } from './Toast';
 import { PropertiesPanel } from './PropertiesPanel';
 
@@ -108,13 +109,18 @@ export const FlowEditor = ({
                 id: getId(),
                 type,
                 position,
-                data: { label: label },
+                data: { ...defaultDataForType(type), label },
             };
 
             setNodes((nds: Node[]) => nds.concat(newNode));
         },
         [reactFlowInstance, setNodes],
     );
+
+    const handleDeleteNode = useCallback((nodeId: string) => {
+        setNodes((nds: Node[]) => nds.filter(n => n.id !== nodeId));
+        setEdges((eds: Edge[]) => eds.filter(e => e.source !== nodeId && e.target !== nodeId));
+    }, [setNodes, setEdges]);
 
     // Function to update node data (for editable nodes like Comment)
     const handleNodeDataChange = useCallback((nodeId: string, newData: any) => {
@@ -220,12 +226,14 @@ export const FlowEditor = ({
             {styledNodes.find(n => n.selected) && (
                 <PropertiesPanel
                     selectedNode={styledNodes.find(n => n.selected) || null}
+                    allNodes={nodes}
                     onClose={() => {
                         setNodes((nds: Node[]) => nds.map(n => ({ ...n, selected: false })));
                     }}
                     onUpdateNode={(id: string, data: any) => {
                         handleNodeDataChange(id, data);
                     }}
+                    onDeleteNode={handleDeleteNode}
                 />
             )}
             {toastMessage && (

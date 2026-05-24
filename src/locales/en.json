@@ -28,6 +28,10 @@
         "label": "Start",
         "description": "Start of flow"
       },
+      "declare": {
+        "label": "Declare",
+        "description": "Declares a variable"
+      },
       "process": {
         "label": "Process",
         "description": "Executes an action"
@@ -80,7 +84,50 @@
     "messageLabel": "Message",
     "messagePlaceholder": "Enter a value",
     "noProperties": "No properties to configure.",
-    "updateButton": "Update Node"
+    "updateButton": "Update Node",
+    "deleteButton": "Delete",
+    "variableTypeLabel": "Variable type",
+    "initialValueLabel": "Initial value (optional)",
+    "initialValuePlaceholder": "0",
+    "inputPromptLabel": "Prompt message (optional)",
+    "inputPromptPlaceholder": "Enter a number...",
+    "inputVariableLabel": "Variable to fill",
+    "inputVariablePlaceholder": "Pick a declared variable",
+    "noDeclaredVars": "No declared variables. Add a Declare block first.",
+    "outputPartsLabel": "Parts to print",
+    "outputPartsHint": "Add text or variable rows: they will be concatenated.",
+    "outputAddText": "+ Text",
+    "outputAddVar": "+ Variable",
+    "outputPartText": "Text",
+    "outputPartVariable": "Variable",
+    "outputTextPlaceholder": "Hello, ",
+    "outputEmpty": "No parts yet. Add text or variables.",
+    "processAssignTo": "Assign to (optional)",
+    "processAssignToHint": "Leave empty to just evaluate the expression without assigning.",
+    "truePositionLabel": "True exit",
+    "falsePositionLabel": "False exit",
+    "posBottom": "Bottom",
+    "posRight": "Right",
+    "posLeft": "Left",
+    "positionsHint": "True and False must be on different sides of the diamond."
+  },
+  "varTypes": {
+    "int": "Integer",
+    "float": "Float",
+    "string": "String",
+    "bool": "Boolean"
+  },
+  "viewMode": {
+    "flowchart": "Flowchart",
+    "pseudocode": "Pseudocode",
+    "toggleTitle": "Switch view"
+  },
+  "pseudocode": {
+    "emptyHint": "Add blocks in the flowchart or insert a line below BEGIN.",
+    "exportTxt": "Pseudocode TXT",
+    "exportTxtDesc": "Plain text file",
+    "exportPdf": "Pseudocode PDF",
+    "exportPdfDesc": "Printable document"
   },
   "modal": {
     "descriptionTitle": "Description",
@@ -97,6 +144,7 @@
   "nodes": {
     "start": "Start",
     "end": "End",
+    "declare": "Declare",
     "process": "Process",
     "decision": "Decision",
     "input": "Input",

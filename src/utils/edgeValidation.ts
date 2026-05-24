@@ -11,6 +11,7 @@ export interface NodeConnectionRules {
 const NODE_RULES: Record<string, NodeConnectionRules> = {
     start: { maxInputs: 0, maxOutputs: 1, canBeTarget: false, canBeSource: true },
     end: { maxInputs: Infinity, maxOutputs: 0, canBeTarget: true, canBeSource: false },
+    declare: { maxInputs: Infinity, maxOutputs: 1, canBeTarget: true, canBeSource: true },
     process: { maxInputs: Infinity, maxOutputs: 1, canBeTarget: true, canBeSource: true },
     decision: { maxInputs: Infinity, maxOutputs: 2, canBeTarget: true, canBeSource: true },
     input: { maxInputs: Infinity, maxOutputs: 1, canBeTarget: true, canBeSource: true },
@@ -80,6 +81,7 @@ export function validateConnection(
     if (outgoingEdges.length >= sourceRules.maxOutputs) {
         const messages: Record<string, string> = {
             start: 'Il blocco Start può avere solo 1 connessione in uscita',
+            declare: 'Il blocco Dichiara può avere solo 1 connessione in uscita',
             process: 'Il blocco Process può avere solo 1 connessione in uscita',
             decision: 'Il blocco Decision ha già 2 connessioni in uscita (True e False)',
             input: 'Il blocco Input può avere solo 1 connessione in uscita',

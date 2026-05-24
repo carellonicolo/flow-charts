@@ -4,8 +4,8 @@
  */
 
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import { type EdgeProps, BaseEdge, useReactFlow } from 'reactflow';
-import { Trash } from 'lucide-react';
+import { type EdgeProps, BaseEdge, EdgeLabelRenderer, useReactFlow } from 'reactflow';
+import { Trash, Trash2 } from 'lucide-react';
 import { type WaypointEdgeData, type Waypoint } from '../types/waypoint';
 
 /**
@@ -187,6 +187,7 @@ export const WaypointEdge: React.FC<EdgeProps<WaypointEdgeData>> = ({
   targetX,
   targetY,
   data,
+  selected,
   markerEnd,
   style
 }) => {
@@ -194,6 +195,20 @@ export const WaypointEdge: React.FC<EdgeProps<WaypointEdgeData>> = ({
   const [selectedWaypoint, setSelectedWaypoint] = useState<string | null>(null);
 
   const waypoints = data?.waypoints || [];
+
+  // Center point along the path: midpoint of source/target, biased to first waypoint if present
+  const centerPoint = useMemo(() => {
+    if (waypoints.length > 0) {
+      const sorted = [...waypoints].sort((a, b) => a.index - b.index);
+      const mid = sorted[Math.floor(sorted.length / 2)];
+      return { x: mid.x, y: mid.y };
+    }
+    return { x: (sourceX + targetX) / 2, y: (sourceY + targetY) / 2 };
+  }, [waypoints, sourceX, sourceY, targetX, targetY]);
+
+  const handleDeleteEdge = useCallback(() => {
+    setEdges(eds => eds.filter(e => e.id !== id));
+  }, [id, setEdges]);
 
   // Deselect waypoint when clicking outside the edge
   useEffect(() => {
@@ -333,6 +348,56 @@ export const WaypointEdge: React.FC<EdgeProps<WaypointEdgeData>> = ({
           position={waypoints.find(wp => wp.id === selectedWaypoint)!}
           onDelete={() => handleDeleteWaypoint(selectedWaypoint)}
         />
+      )}
+
+      {/* Trash icon for the selected edge itself, anchored at its midpoint */}
+      {selected && !selectedWaypoint && (
+        <EdgeLabelRenderer>
+          <div
+            className="nodrag nopan"
+            style={{
+              position: 'absolute',
+              transform: `translate(-50%, -50%) translate(${centerPoint.x}px, ${centerPoint.y}px)`,
+              pointerEvents: 'all',
+              zIndex: 10,
+            }}
+          >
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDeleteEdge();
+              }}
+              title="Elimina connessione"
+              style={{
+                width: '30px',
+                height: '30px',
+                borderRadius: '50%',
+                border: '2px solid #ef4444',
+                background: 'var(--bg-color)',
+                color: '#ef4444',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 4px 12px rgba(239, 68, 68, 0.45)',
+                transition: 'all 0.18s',
+                padding: 0,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = '#ef4444';
+                e.currentTarget.style.color = 'white';
+                e.currentTarget.style.transform = 'scale(1.08)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'var(--bg-color)';
+                e.currentTarget.style.color = '#ef4444';
+                e.currentTarget.style.transform = 'scale(1)';
+              }}
+            >
+              <Trash2 size={15} />
+            </button>
+          </div>
+        </EdgeLabelRenderer>
       )}
     </g>
   );

@@ -28,6 +28,10 @@
         "label": "Inizio",
         "description": "Inizio del flusso"
       },
+      "declare": {
+        "label": "Dichiara",
+        "description": "Dichiara una variabile"
+      },
       "process": {
         "label": "Azione",
         "description": "Esegue un'azione"
@@ -80,7 +84,50 @@
     "messageLabel": "Messaggio",
     "messagePlaceholder": "Inserisci un valore",
     "noProperties": "Nessuna proprietà da configurare.",
-    "updateButton": "Aggiorna nodo"
+    "updateButton": "Aggiorna nodo",
+    "deleteButton": "Elimina",
+    "variableTypeLabel": "Tipo della variabile",
+    "initialValueLabel": "Valore iniziale (opzionale)",
+    "initialValuePlaceholder": "0",
+    "inputPromptLabel": "Messaggio mostrato (opzionale)",
+    "inputPromptPlaceholder": "Inserisci un numero...",
+    "inputVariableLabel": "Variabile da riempire",
+    "inputVariablePlaceholder": "Scegli variabile dichiarata",
+    "noDeclaredVars": "Nessuna variabile dichiarata. Aggiungi un blocco Dichiara prima.",
+    "outputPartsLabel": "Parti da stampare",
+    "outputPartsHint": "Aggiungi righe di testo o variabili: verranno concatenate.",
+    "outputAddText": "+ Testo",
+    "outputAddVar": "+ Variabile",
+    "outputPartText": "Testo",
+    "outputPartVariable": "Variabile",
+    "outputTextPlaceholder": "Ciao, ",
+    "outputEmpty": "Nessuna parte. Aggiungi testo o variabili.",
+    "processAssignTo": "Assegna a (opzionale)",
+    "processAssignToHint": "Lascia vuoto per eseguire solo l'espressione senza assegnare.",
+    "truePositionLabel": "Uscita Vero",
+    "falsePositionLabel": "Uscita Falso",
+    "posBottom": "Sotto",
+    "posRight": "Destra",
+    "posLeft": "Sinistra",
+    "positionsHint": "Vero e Falso devono trovarsi su lati diversi del rombo."
+  },
+  "varTypes": {
+    "int": "Intero",
+    "float": "Decimale",
+    "string": "Stringa",
+    "bool": "Booleano"
+  },
+  "viewMode": {
+    "flowchart": "Diagramma",
+    "pseudocode": "Pseudocodice",
+    "toggleTitle": "Cambia vista"
+  },
+  "pseudocode": {
+    "emptyHint": "Aggiungi blocchi al flowchart oppure inserisci una riga sotto BEGIN.",
+    "exportTxt": "Pseudocodice TXT",
+    "exportTxtDesc": "File di testo",
+    "exportPdf": "Pseudocodice PDF",
+    "exportPdfDesc": "Documento stampabile"
   },
   "modal": {
     "descriptionTitle": "Descrizione",
@@ -97,6 +144,7 @@
   "nodes": {
     "start": "Inizio",
     "end": "Fine",
+    "declare": "Dichiara",
     "process": "Azione",
     "decision": "Decision",
     "input": "Input",

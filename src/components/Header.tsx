@@ -1,4 +1,4 @@
-import { Menu, Play, Square, Terminal, Sun, Moon, Github, Globe, ChevronDown, HelpCircle, Library, Trash2, BookOpen, Star, Brain, Trophy, Palette, Download } from 'lucide-react';
+import { Menu, Play, Square, Terminal, Sun, Moon, Github, Globe, ChevronDown, HelpCircle, Library, Trash2, BookOpen, Star, Brain, Trophy, Palette, Download, Workflow, FileCode } from 'lucide-react';
 import { useTranslation, type Language } from '../i18n/i18nContext';
 import { useState, useRef, useEffect } from 'react';
 import { HelpModal } from './HelpModal';
@@ -13,6 +13,8 @@ interface HeaderProps {
   onDownloadPDF?: () => void;
   onDownloadPNG?: () => void;
   onDownloadJPEG?: () => void;
+  onDownloadPseudoTxt?: () => void;
+  onDownloadPseudoPdf?: () => void;
   onClear?: () => void;
   onToggleSidebar: () => void;
   isConsoleOpen: boolean;
@@ -21,6 +23,8 @@ interface HeaderProps {
   onStartExercise: (description: string) => void;
   colorTheme: string;
   onColorThemeChange: (theme: string) => void;
+  viewMode: 'flowchart' | 'pseudocode';
+  onChangeViewMode: (mode: 'flowchart' | 'pseudocode') => void;
 }
 
 export const Header = ({
@@ -31,6 +35,8 @@ export const Header = ({
   onDownloadPDF,
   onDownloadPNG,
   onDownloadJPEG,
+  onDownloadPseudoTxt,
+  onDownloadPseudoPdf,
   onClear,
   onToggleSidebar,
   isConsoleOpen,
@@ -39,6 +45,8 @@ export const Header = ({
   onStartExercise,
   colorTheme,
   onColorThemeChange,
+  viewMode,
+  onChangeViewMode,
 }: HeaderProps) => {
   const { t, language, changeLanguage } = useTranslation();
   const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
@@ -149,6 +157,29 @@ export const Header = ({
           <div className="command-capsule">
             <div className={`status-led ${isExecuting ? 'active' : ''}`} />
 
+            <div className="view-mode-toggle" title={t('viewMode.toggleTitle')}>
+              <button
+                type="button"
+                className={`view-mode-btn ${viewMode === 'flowchart' ? 'active' : ''}`}
+                onClick={() => onChangeViewMode('flowchart')}
+                title={t('viewMode.flowchart')}
+              >
+                <Workflow size={14} />
+                <span className="btn-label">{t('viewMode.flowchart')}</span>
+              </button>
+              <button
+                type="button"
+                className={`view-mode-btn ${viewMode === 'pseudocode' ? 'active' : ''}`}
+                onClick={() => onChangeViewMode('pseudocode')}
+                title={t('viewMode.pseudocode')}
+              >
+                <FileCode size={14} />
+                <span className="btn-label">{t('viewMode.pseudocode')}</span>
+              </button>
+            </div>
+
+            <div className="capsule-divider" />
+
             <div ref={downloadDropdownRef} className="download-wrapper">
               <button
                 className={`capsule-btn secondary ${isDownloadDropdownOpen ? 'active' : ''}`}
@@ -185,6 +216,21 @@ export const Header = ({
                     <div className="item-info">
                       <span className="item-label">Immagine JPEG</span>
                       <span className="item-desc">{language === 'it' ? 'File leggero/compatto' : 'Smaller file size'}</span>
+                    </div>
+                  </button>
+                  <div style={{ height: '1px', background: 'var(--glass-border)', margin: '6px 0' }} />
+                  <button className="dropdown-item" onClick={() => { onDownloadPseudoTxt?.(); setIsDownloadDropdownOpen(false); }}>
+                    <div className="item-icon txt">TXT</div>
+                    <div className="item-info">
+                      <span className="item-label">{t('pseudocode.exportTxt')}</span>
+                      <span className="item-desc">{t('pseudocode.exportTxtDesc')}</span>
+                    </div>
+                  </button>
+                  <button className="dropdown-item" onClick={() => { onDownloadPseudoPdf?.(); setIsDownloadDropdownOpen(false); }}>
+                    <div className="item-icon pseudo-pdf">PDF</div>
+                    <div className="item-info">
+                      <span className="item-label">{t('pseudocode.exportPdf')}</span>
+                      <span className="item-desc">{t('pseudocode.exportPdfDesc')}</span>
                     </div>
                   </button>
                 </div>

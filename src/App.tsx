@@ -8,8 +8,10 @@ import { Sidebar, type HelpContent } from './components/Sidebar';
 import { Header } from './components/Header';
 import { HelpModal } from './components/HelpModal';
 import { Toast } from './components/Toast';
+import { PseudocodeView } from './components/PseudocodeView';
 import { Executor } from './engine/Executor';
 import { validateFlowSyntax, formatValidationMessage } from './utils/flowValidation';
+import { buildPseudocodeProgram } from './utils/pseudocode';
 import './styles/main.css';
 
 function AppContent() {
@@ -34,6 +36,9 @@ function AppContent() {
   // Mobile states
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isConsoleOpen, setIsConsoleOpen] = useState(false);
+
+  // View mode
+  const [viewMode, setViewMode] = useState<'flowchart' | 'pseudocode'>('flowchart');
 
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -167,11 +172,28 @@ function AppContent() {
 
     setLogs(prev => [...prev, `⚙️ Generazione ${format.toUpperCase()} in corso...`]);
 
+    // Switch the canvas to a clean "exporting" mode so colored glows,
+    // backdrop-filter blur and overlays don't bleed into the captured image.
+    flowElement.classList.add('exporting');
+    // Wait two animation frames to make sure the browser repainted without effects.
+    await new Promise(requestAnimationFrame);
+    await new Promise(requestAnimationFrame);
+
     try {
+      const filter = (node: HTMLElement) => {
+        if (!(node instanceof HTMLElement)) return true;
+        if (node.classList?.contains('properties-side-panel')) return false;
+        if (node.classList?.contains('react-flow__node-toolbar')) return false;
+        if (node.classList?.contains('react-flow__minimap')) return false;
+        if (node.classList?.contains('react-flow__controls')) return false;
+        return true;
+      };
+
       const options = {
         backgroundColor: theme === 'dark' ? '#0f172a' : '#f1f5f9',
-        pixelRatio: 1.5,
+        pixelRatio: 2,
         cacheBust: true,
+        filter,
       };
 
       if (format === 'pdf' || format === 'png') {
@@ -194,7 +216,7 @@ function AppContent() {
           document.body.removeChild(link);
         }
       } else if (format === 'jpeg') {
-        const dataUrl = await toJpeg(flowElement, { ...options, quality: 0.9 });
+        const dataUrl = await toJpeg(flowElement, { ...options, quality: 0.92 });
         const link = document.createElement('a');
         link.href = dataUrl;
         link.download = 'flow-chart.jpg';
@@ -207,12 +229,73 @@ function AppContent() {
     } catch (error) {
       console.error(`Errore durante il download del ${format.toUpperCase()}:`, error);
       setLogs(prev => [...prev, `❌ Errore durante il download del ${format.toUpperCase()}`]);
+    } finally {
+      flowElement.classList.remove('exporting');
     }
   };
 
   const handleDownloadPDF = () => handleExport('pdf');
   const handleDownloadPNG = () => handleExport('png');
   const handleDownloadJPEG = () => handleExport('jpeg');
+
+  const handleDownloadPseudoTxt = () => {
+    try {
+      const text = buildPseudocodeProgram(nodes, edges);
+      const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'pseudocode.txt';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      setLogs(prev => [...prev, '📄 Pseudocodice TXT scaricato']);
+    } catch (error) {
+      console.error(error);
+      setLogs(prev => [...prev, '❌ Errore durante l\'export TXT']);
+    }
+  };
+
+  const handleDownloadPseudoPdf = () => {
+    try {
+      const text = buildPseudocodeProgram(nodes, edges);
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+      const margin = 40;
+      const lineHeight = 14;
+      const fontSize = 11;
+      pdf.setFont('courier', 'normal');
+      pdf.setFontSize(fontSize);
+
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const usableWidth = pageWidth - margin * 2;
+
+      let y = margin;
+      pdf.setFontSize(14);
+      pdf.text('Pseudocode', margin, y);
+      y += 24;
+      pdf.setFontSize(fontSize);
+
+      const lines = text.split('\n');
+      for (const line of lines) {
+        const wrapped = pdf.splitTextToSize(line || ' ', usableWidth);
+        for (const w of wrapped) {
+          if (y + lineHeight > pageHeight - margin) {
+            pdf.addPage();
+            y = margin;
+          }
+          pdf.text(w, margin, y);
+          y += lineHeight;
+        }
+      }
+      pdf.save('pseudocode.pdf');
+      setLogs(prev => [...prev, '📄 Pseudocodice PDF scaricato']);
+    } catch (error) {
+      console.error(error);
+      setLogs(prev => [...prev, '❌ Errore durante l\'export PDF pseudocodice']);
+    }
+  };
 
   const handleStartExercise = (description: string) => {
     handleClear();
@@ -229,11 +312,14 @@ function AppContent() {
     let newNodes: any[] = [];
     let newEdges: any[] = [];
 
+    const txt = (s: string) => ({ kind: 'text' as const, value: s });
+    const varp = (s: string) => ({ kind: 'var' as const, value: s });
+
     if (exampleName === 'hello') {
       newNodes = [
         { id: 'c1', type: 'comment', position: { x: 50, y: 50 }, data: { label: 'SCOPO:\nPrimo programma introduttivo.\nMostra output di testo.\n\nSCELTE:\n- Output diretto\n- Testo tra virgolette\n- Flusso lineare' } },
         { id: '1', type: 'start', position: { x: 300, y: 50 }, data: { label: 'Start' } },
-        { id: '2', type: 'output', position: { x: 300, y: 200 }, data: { label: 'Hello World', expression: '"Hello World"' } },
+        { id: '2', type: 'output', position: { x: 300, y: 200 }, data: { label: '"Hello World"', parts: [txt('Hello World')] } },
         { id: '3', type: 'end', position: { x: 300, y: 350 }, data: { label: 'End' } },
       ];
       newEdges = [
@@ -242,17 +328,17 @@ function AppContent() {
       ];
     } else if (exampleName === 'counter') {
       newNodes = [
-        { id: 'c1', type: 'comment', position: { x: 50, y: 20 }, data: { label: 'SCOPO:\nCiclo iterativo 1-5.\n\nSCELTE:\n- Contatore i=1\n- Condizione i<=5\n- Incremento i+1\n- False esce' } },
+        { id: 'c1', type: 'comment', position: { x: 50, y: 20 }, data: { label: 'SCOPO:\nCiclo iterativo 1-5.' } },
         { id: '1', type: 'start', position: { x: 300, y: 20 }, data: { label: 'Start' } },
-        { id: '2', type: 'process', position: { x: 300, y: 120 }, data: { label: 'i = 1', variableName: 'i', expression: '1' } },
-        { id: '3', type: 'decision', position: { x: 300, y: 240 }, data: { label: 'i <= 5', condition: 'i <= 5' } },
-        { id: '4', type: 'output', position: { x: 300, y: 420 }, data: { label: 'Print i', expression: 'i' } },
-        { id: '5', type: 'process', position: { x: 300, y: 550 }, data: { label: 'i = i + 1', variableName: 'i', expression: 'i + 1' } },
-        { id: '6', type: 'end', position: { x: 580, y: 240 }, data: { label: 'End' } },
+        { id: 'd', type: 'declare', position: { x: 300, y: 120 }, data: { label: 'i', variableName: 'i', variableType: 'int', initialValue: '1' } },
+        { id: '3', type: 'decision', position: { x: 300, y: 260 }, data: { label: 'i <= 5', condition: 'i <= 5' } },
+        { id: '4', type: 'output', position: { x: 300, y: 440 }, data: { label: 'i', parts: [varp('i')] } },
+        { id: '5', type: 'process', position: { x: 300, y: 570 }, data: { label: 'i := i + 1', variableName: 'i', expression: 'i + 1' } },
+        { id: '6', type: 'end', position: { x: 580, y: 260 }, data: { label: 'End' } },
       ];
       newEdges = [
-        { id: 'e1-2', source: '1', target: '2', type: 'waypoint', data: { waypoints: [] }, animated: true },
-        { id: 'e2-3', source: '2', target: '3', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'e1-d', source: '1', target: 'd', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'ed-3', source: 'd', target: '3', type: 'waypoint', data: { waypoints: [] }, animated: true },
         { id: 'e3-4', source: '3', target: '4', sourceHandle: 'true', type: 'waypoint', data: { waypoints: [] }, animated: true },
         { id: 'e4-5', source: '4', target: '5', type: 'waypoint', data: { waypoints: [] }, animated: true },
         { id: 'e5-3', source: '5', target: '3', type: 'waypoint', data: { waypoints: [] }, animated: true },
@@ -260,16 +346,22 @@ function AppContent() {
       ];
     } else if (exampleName === 'sum') {
       newNodes = [
-        { id: 'c1', type: 'comment', position: { x: 50, y: 80 }, data: { label: 'SCOPO:\nSomma due numeri.\n\nSCELTE:\n- Input a e b separati\n- Process per somma\n- Output risultato' } },
+        { id: 'c1', type: 'comment', position: { x: 50, y: 80 }, data: { label: 'SCOPO:\nSomma due numeri.' } },
         { id: '1', type: 'start', position: { x: 300, y: 50 }, data: { label: 'Start' } },
-        { id: '2', type: 'input', position: { x: 300, y: 170 }, data: { label: 'Numero a', variableName: 'a' } },
-        { id: '3', type: 'input', position: { x: 300, y: 300 }, data: { label: 'Numero b', variableName: 'b' } },
-        { id: '4', type: 'process', position: { x: 300, y: 430 }, data: { label: 'somma = a + b', variableName: 'somma', expression: 'a + b' } },
-        { id: '5', type: 'output', position: { x: 300, y: 560 }, data: { label: 'somma', expression: 'somma' } },
-        { id: '6', type: 'end', position: { x: 300, y: 690 }, data: { label: 'End' } },
+        { id: 'da', type: 'declare', position: { x: 300, y: 150 }, data: { label: 'a', variableName: 'a', variableType: 'int' } },
+        { id: 'db', type: 'declare', position: { x: 300, y: 270 }, data: { label: 'b', variableName: 'b', variableType: 'int' } },
+        { id: 'ds', type: 'declare', position: { x: 300, y: 390 }, data: { label: 'somma', variableName: 'somma', variableType: 'int' } },
+        { id: '2', type: 'input', position: { x: 300, y: 510 }, data: { label: '→ a', variableName: 'a', prompt: 'Numero a' } },
+        { id: '3', type: 'input', position: { x: 300, y: 630 }, data: { label: '→ b', variableName: 'b', prompt: 'Numero b' } },
+        { id: '4', type: 'process', position: { x: 300, y: 750 }, data: { label: 'somma := a + b', variableName: 'somma', expression: 'a + b' } },
+        { id: '5', type: 'output', position: { x: 300, y: 880 }, data: { label: '"Somma: " + somma', parts: [txt('Somma: '), varp('somma')] } },
+        { id: '6', type: 'end', position: { x: 300, y: 1010 }, data: { label: 'End' } },
       ];
       newEdges = [
-        { id: 'e1-2', source: '1', target: '2', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'e1-da', source: '1', target: 'da', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'eda-db', source: 'da', target: 'db', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'edb-ds', source: 'db', target: 'ds', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'eds-2', source: 'ds', target: '2', type: 'waypoint', data: { waypoints: [] }, animated: true },
         { id: 'e2-3', source: '2', target: '3', type: 'waypoint', data: { waypoints: [] }, animated: true },
         { id: 'e3-4', source: '3', target: '4', type: 'waypoint', data: { waypoints: [] }, animated: true },
         { id: 'e4-5', source: '4', target: '5', type: 'waypoint', data: { waypoints: [] }, animated: true },
@@ -277,18 +369,22 @@ function AppContent() {
       ];
     } else if (exampleName === 'evenodd') {
       newNodes = [
-        { id: 'c1', type: 'comment', position: { x: 50, y: 80 }, data: { label: 'SCOPO:\nPari o dispari.\n\nSCELTE:\n- Modulo n%2\n- Decision resto==0\n- Output diversi' } },
+        { id: 'c1', type: 'comment', position: { x: 50, y: 80 }, data: { label: 'SCOPO:\nPari o dispari.' } },
         { id: '1', type: 'start', position: { x: 300, y: 50 }, data: { label: 'Start' } },
-        { id: '2', type: 'input', position: { x: 300, y: 170 }, data: { label: 'Numero n', variableName: 'n' } },
-        { id: '3', type: 'process', position: { x: 300, y: 290 }, data: { label: 'resto = n % 2', variableName: 'resto', expression: 'n % 2' } },
-        { id: '4', type: 'decision', position: { x: 300, y: 420 }, data: { label: 'resto == 0', condition: 'resto == 0' } },
-        { id: '5', type: 'output', position: { x: 300, y: 600 }, data: { label: 'Pari', expression: '"Pari"' } },
-        { id: '6', type: 'output', position: { x: 580, y: 420 }, data: { label: 'Dispari', expression: '"Dispari"' } },
-        { id: '7', type: 'end', position: { x: 300, y: 730 }, data: { label: 'End' } },
-        { id: '8', type: 'end', position: { x: 580, y: 570 }, data: { label: 'End' } },
+        { id: 'dn', type: 'declare', position: { x: 300, y: 150 }, data: { label: 'n', variableName: 'n', variableType: 'int' } },
+        { id: 'dr', type: 'declare', position: { x: 300, y: 270 }, data: { label: 'resto', variableName: 'resto', variableType: 'int' } },
+        { id: '2', type: 'input', position: { x: 300, y: 390 }, data: { label: '→ n', variableName: 'n', prompt: 'Numero n' } },
+        { id: '3', type: 'process', position: { x: 300, y: 510 }, data: { label: 'resto := n % 2', variableName: 'resto', expression: 'n % 2' } },
+        { id: '4', type: 'decision', position: { x: 300, y: 640 }, data: { label: 'resto == 0', condition: 'resto == 0' } },
+        { id: '5', type: 'output', position: { x: 300, y: 820 }, data: { label: '"Pari"', parts: [txt('Pari')] } },
+        { id: '6', type: 'output', position: { x: 580, y: 640 }, data: { label: '"Dispari"', parts: [txt('Dispari')] } },
+        { id: '7', type: 'end', position: { x: 300, y: 950 }, data: { label: 'End' } },
+        { id: '8', type: 'end', position: { x: 580, y: 790 }, data: { label: 'End' } },
       ];
       newEdges = [
-        { id: 'e1-2', source: '1', target: '2', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'e1-dn', source: '1', target: 'dn', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'edn-dr', source: 'dn', target: 'dr', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'edr-2', source: 'dr', target: '2', type: 'waypoint', data: { waypoints: [] }, animated: true },
         { id: 'e2-3', source: '2', target: '3', type: 'waypoint', data: { waypoints: [] }, animated: true },
         { id: 'e3-4', source: '3', target: '4', type: 'waypoint', data: { waypoints: [] }, animated: true },
         { id: 'e4-5', source: '4', target: '5', sourceHandle: 'true', type: 'waypoint', data: { waypoints: [] }, animated: true },
@@ -298,22 +394,28 @@ function AppContent() {
       ];
     } else if (exampleName === 'max3') {
       newNodes = [
-        { id: 'c1', type: 'comment', position: { x: 850, y: 50 }, data: { label: 'SCOPO:\nMassimo tra 3.\n\nSCELTE:\n- Decision annidati\n- Confronto a vs b\n- Vincente vs c' } },
+        { id: 'c1', type: 'comment', position: { x: 850, y: 50 }, data: { label: 'SCOPO:\nMassimo tra 3.' } },
         { id: '1', type: 'start', position: { x: 450, y: 50 }, data: { label: 'Start' } },
-        { id: '2', type: 'input', position: { x: 450, y: 170 }, data: { label: 'a', variableName: 'a' } },
-        { id: '3', type: 'input', position: { x: 450, y: 280 }, data: { label: 'b', variableName: 'b' } },
-        { id: '4', type: 'input', position: { x: 450, y: 390 }, data: { label: 'c', variableName: 'c' } },
-        { id: '5', type: 'decision', position: { x: 450, y: 510 }, data: { label: 'a > b', condition: 'a > b' } },
-        { id: '6', type: 'decision', position: { x: 250, y: 690 }, data: { label: 'a > c', condition: 'a > c' } },
-        { id: '7', type: 'decision', position: { x: 650, y: 690 }, data: { label: 'b > c', condition: 'b > c' } },
-        { id: '8', type: 'output', position: { x: 100, y: 870 }, data: { label: 'Max: a', expression: 'a' } },
-        { id: '9', type: 'output', position: { x: 400, y: 870 }, data: { label: 'Max: c', expression: 'c' } },
-        { id: '10', type: 'output', position: { x: 650, y: 870 }, data: { label: 'Max: b', expression: 'b' } },
-        { id: '11', type: 'output', position: { x: 900, y: 870 }, data: { label: 'Max: c', expression: 'c' } },
-        { id: '12', type: 'end', position: { x: 450, y: 1020 }, data: { label: 'End' } },
+        { id: 'da', type: 'declare', position: { x: 450, y: 150 }, data: { label: 'a', variableName: 'a', variableType: 'int' } },
+        { id: 'db', type: 'declare', position: { x: 450, y: 270 }, data: { label: 'b', variableName: 'b', variableType: 'int' } },
+        { id: 'dc', type: 'declare', position: { x: 450, y: 390 }, data: { label: 'c', variableName: 'c', variableType: 'int' } },
+        { id: '2', type: 'input', position: { x: 450, y: 510 }, data: { label: '→ a', variableName: 'a' } },
+        { id: '3', type: 'input', position: { x: 450, y: 620 }, data: { label: '→ b', variableName: 'b' } },
+        { id: '4', type: 'input', position: { x: 450, y: 730 }, data: { label: '→ c', variableName: 'c' } },
+        { id: '5', type: 'decision', position: { x: 450, y: 850 }, data: { label: 'a > b', condition: 'a > b' } },
+        { id: '6', type: 'decision', position: { x: 250, y: 1030 }, data: { label: 'a > c', condition: 'a > c' } },
+        { id: '7', type: 'decision', position: { x: 650, y: 1030 }, data: { label: 'b > c', condition: 'b > c' } },
+        { id: '8', type: 'output', position: { x: 100, y: 1210 }, data: { label: '"Max: " + a', parts: [txt('Max: '), varp('a')] } },
+        { id: '9', type: 'output', position: { x: 400, y: 1210 }, data: { label: '"Max: " + c', parts: [txt('Max: '), varp('c')] } },
+        { id: '10', type: 'output', position: { x: 650, y: 1210 }, data: { label: '"Max: " + b', parts: [txt('Max: '), varp('b')] } },
+        { id: '11', type: 'output', position: { x: 900, y: 1210 }, data: { label: '"Max: " + c', parts: [txt('Max: '), varp('c')] } },
+        { id: '12', type: 'end', position: { x: 450, y: 1360 }, data: { label: 'End' } },
       ];
       newEdges = [
-        { id: 'e1-2', source: '1', target: '2', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'e1-da', source: '1', target: 'da', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'eda-db', source: 'da', target: 'db', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'edb-dc', source: 'db', target: 'dc', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'edc-2', source: 'dc', target: '2', type: 'waypoint', data: { waypoints: [] }, animated: true },
         { id: 'e2-3', source: '2', target: '3', type: 'waypoint', data: { waypoints: [] }, animated: true },
         { id: 'e3-4', source: '3', target: '4', type: 'waypoint', data: { waypoints: [] }, animated: true },
         { id: 'e4-5', source: '4', target: '5', type: 'waypoint', data: { waypoints: [] }, animated: true },
@@ -330,20 +432,22 @@ function AppContent() {
       ];
     } else if (exampleName === 'factorial') {
       newNodes = [
-        { id: 'c1', type: 'comment', position: { x: 50, y: 80 }, data: { label: 'SCOPO:\nFattoriale n!\n\nSCELTE:\n- risultato=1\n- Loop n>1\n- calcola ris * n\n- decrementa n' } },
+        { id: 'c1', type: 'comment', position: { x: 50, y: 80 }, data: { label: 'SCOPO:\nFattoriale n!' } },
         { id: 'f1', type: 'start', position: { x: 350, y: 50 }, data: { label: 'Start' } },
-        { id: 'f2', type: 'input', position: { x: 350, y: 170 }, data: { label: 'Numero n', variableName: 'n' } },
-        { id: 'f3', type: 'process', position: { x: 350, y: 280 }, data: { label: 'risultato = 1', variableName: 'risultato', expression: '1' } },
-        { id: 'f4', type: 'decision', position: { x: 350, y: 410 }, data: { label: 'n > 1?', condition: 'n > 1' } },
-        { id: 'f5', type: 'process', position: { x: 350, y: 590 }, data: { label: 'ris = ris * n', variableName: 'risultato', expression: 'risultato * n' } },
-        { id: 'f6', type: 'process', position: { x: 350, y: 710 }, data: { label: 'n = n - 1', variableName: 'n', expression: 'n - 1' } },
-        { id: 'f7', type: 'output', position: { x: 630, y: 410 }, data: { label: 'risultato', expression: 'risultato' } },
-        { id: 'f8', type: 'end', position: { x: 630, y: 560 }, data: { label: 'End' } },
+        { id: 'dn', type: 'declare', position: { x: 350, y: 150 }, data: { label: 'n', variableName: 'n', variableType: 'int' } },
+        { id: 'dr', type: 'declare', position: { x: 350, y: 270 }, data: { label: 'risultato', variableName: 'risultato', variableType: 'int', initialValue: '1' } },
+        { id: 'f2', type: 'input', position: { x: 350, y: 400 }, data: { label: '→ n', variableName: 'n', prompt: 'Numero n' } },
+        { id: 'f4', type: 'decision', position: { x: 350, y: 530 }, data: { label: 'n > 1', condition: 'n > 1' } },
+        { id: 'f5', type: 'process', position: { x: 350, y: 710 }, data: { label: 'risultato := risultato * n', variableName: 'risultato', expression: 'risultato * n' } },
+        { id: 'f6', type: 'process', position: { x: 350, y: 830 }, data: { label: 'n := n - 1', variableName: 'n', expression: 'n - 1' } },
+        { id: 'f7', type: 'output', position: { x: 630, y: 530 }, data: { label: '"Risultato: " + risultato', parts: [txt('Risultato: '), varp('risultato')] } },
+        { id: 'f8', type: 'end', position: { x: 630, y: 680 }, data: { label: 'End' } },
       ];
       newEdges = [
-        { id: 'fe1-2', source: 'f1', target: 'f2', type: 'waypoint', data: { waypoints: [] }, animated: true },
-        { id: 'fe2-3', source: 'f2', target: 'f3', type: 'waypoint', data: { waypoints: [] }, animated: true },
-        { id: 'fe3-4', source: 'f3', target: 'f4', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'fe1-dn', source: 'f1', target: 'dn', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'fedn-dr', source: 'dn', target: 'dr', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'fedr-2', source: 'dr', target: 'f2', type: 'waypoint', data: { waypoints: [] }, animated: true },
+        { id: 'fe2-4', source: 'f2', target: 'f4', type: 'waypoint', data: { waypoints: [] }, animated: true },
         { id: 'fe4-5', source: 'f4', target: 'f5', sourceHandle: 'true', type: 'waypoint', data: { waypoints: [] }, animated: true },
         { id: 'fe5-6', source: 'f5', target: 'f6', type: 'waypoint', data: { waypoints: [] }, animated: true },
         { id: 'fe6-4', source: 'f6', target: 'f4', type: 'waypoint', data: { waypoints: [] }, animated: true },
@@ -369,12 +473,16 @@ function AppContent() {
         onDownloadPDF={handleDownloadPDF}
         onDownloadPNG={handleDownloadPNG}
         onDownloadJPEG={handleDownloadJPEG}
+        onDownloadPseudoTxt={handleDownloadPseudoTxt}
+        onDownloadPseudoPdf={handleDownloadPseudoPdf}
         onClear={handleClear}
         onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         isConsoleOpen={isConsoleOpen}
         onToggleConsole={() => setIsConsoleOpen(!isConsoleOpen)}
         onLoadExample={loadExample}
         onStartExercise={handleStartExercise}
+        viewMode={viewMode}
+        onChangeViewMode={setViewMode}
       />
 
       <div className="main-content">
@@ -383,17 +491,27 @@ function AppContent() {
         </div>
 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative' }}>
-          <FlowEditor
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            setEdges={setEdges}
-            setNodes={setNodes}
-            highlightedNodeId={highlightedNodeId}
-            onPaneClick={onPaneClick}
-            theme={theme}
-          />
+          {viewMode === 'flowchart' ? (
+            <FlowEditor
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              setEdges={setEdges}
+              setNodes={setNodes}
+              highlightedNodeId={highlightedNodeId}
+              onPaneClick={onPaneClick}
+              theme={theme}
+            />
+          ) : (
+            <PseudocodeView
+              nodes={nodes}
+              edges={edges}
+              setNodes={setNodes}
+              setEdges={setEdges}
+              theme={theme}
+            />
+          )}
 
           <div className={`console-container ${isConsoleOpen ? 'open' : ''}`}>
             <Console

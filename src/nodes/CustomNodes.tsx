@@ -1,7 +1,8 @@
 import React from 'react';
 import { Handle, Position, type NodeProps } from 'reactflow';
-import { Play, Square, ArrowRight, Save, LogOut, Diamond, MessageSquare } from 'lucide-react';
+import { Play, Square, ArrowRight, Save, LogOut, Diamond, MessageSquare, Variable } from 'lucide-react';
 import { useTranslation } from '../i18n/i18nContext';
+import { VAR_TYPE_LABELS, previewOutput, type OutputPart, type VarType, type DecisionHandlePos } from '../types/flow';
 
 const handleStyle = { width: 10, height: 10, background: '#fff', border: '2px solid #333' };
 
@@ -49,6 +50,41 @@ export const EndNode = ({ }: NodeProps) => {
     );
 };
 
+export const DeclareNode = ({ data }: NodeProps) => {
+    const { t, language } = useTranslation();
+    const varName: string = data.variableName || '';
+    const varType: VarType = data.variableType || 'int';
+    const initial: string = data.initialValue || '';
+    const typeLabel = VAR_TYPE_LABELS[varType]?.[language === 'it' ? 'it' : 'en'] ?? varType;
+    return (
+        <div className="glass-panel" style={{
+            padding: '14px 16px',
+            background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
+            borderRadius: '12px',
+            minWidth: '170px',
+            textAlign: 'center',
+            boxShadow: '0 4px 15px rgba(14, 165, 233, 0.4)',
+            border: '1px solid rgba(255,255,255,0.2)'
+        }}>
+            <Handle type="target" position={Position.Top} style={handleStyle} />
+            <div style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', opacity: 0.9 }}>
+                <Variable size={14} color="white" />
+                <span style={{ color: 'white', fontSize: '11px', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.5px' }}>{t('nodes.declare')}</span>
+            </div>
+            <div style={{ color: 'white', fontWeight: 'bold', fontSize: '1.05rem', lineHeight: 1.2 }}>
+                {varName || '—'}
+                <span style={{ fontWeight: 400, opacity: 0.85, fontSize: '0.85rem' }}> : {typeLabel}</span>
+            </div>
+            {initial ? (
+                <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.85rem', marginTop: '4px' }}>
+                    = {initial}
+                </div>
+            ) : null}
+            <Handle type="source" position={Position.Bottom} style={handleStyle} />
+        </div>
+    );
+};
+
 export const ProcessNode = ({ data }: NodeProps) => {
     const { t } = useTranslation();
     return (
@@ -74,22 +110,54 @@ export const ProcessNode = ({ data }: NodeProps) => {
 
 export const DecisionNode = ({ data }: NodeProps) => {
     const { t } = useTranslation();
-    // Configurazione diamante
     const diamondSize = 140;
     const containerSize = 180;
-    const centerPoint = containerSize / 2; // 90px
-
-    // Calcolo distanza vertici dal centro per diamante ruotato 45°
-    // Formula: sqrt(2) * (lato / 2)
-    const vertexDistance = Math.sqrt(2) * (diamondSize / 2); // ≈ 99px
+    const centerPoint = containerSize / 2;
+    const vertexDistance = Math.sqrt(2) * (diamondSize / 2);
 
     const handleStyleLocal = {
         width: 10,
         height: 10,
         background: '#fff',
         border: '2px solid #333',
-        zIndex: 10
+        zIndex: 10,
     };
+
+    const truePos: DecisionHandlePos = data.truePosition || 'bottom';
+    const falsePos: DecisionHandlePos = data.falsePosition || 'right';
+
+    const positionMap: Record<DecisionHandlePos, { rfPos: Position; top: number; left: number; labelTop: number; labelLeft: number; labelTransform: string; labelAnchor: 'center' | 'left' | 'right' }> = {
+        bottom: {
+            rfPos: Position.Bottom,
+            top: centerPoint + vertexDistance,
+            left: centerPoint,
+            labelTop: centerPoint + vertexDistance + 15,
+            labelLeft: centerPoint,
+            labelTransform: 'translateX(-50%)',
+            labelAnchor: 'center',
+        },
+        right: {
+            rfPos: Position.Right,
+            top: centerPoint,
+            left: centerPoint + vertexDistance,
+            labelTop: centerPoint,
+            labelLeft: centerPoint + vertexDistance + 15,
+            labelTransform: 'translateY(-50%)',
+            labelAnchor: 'left',
+        },
+        left: {
+            rfPos: Position.Left,
+            top: centerPoint,
+            left: centerPoint - vertexDistance,
+            labelTop: centerPoint,
+            labelLeft: centerPoint - vertexDistance - 15,
+            labelTransform: 'translate(-100%, -50%)',
+            labelAnchor: 'right',
+        },
+    };
+
+    const trueCfg = positionMap[truePos];
+    const falseCfg = positionMap[falsePos];
 
     return (
         <div style={{
@@ -97,7 +165,7 @@ export const DecisionNode = ({ data }: NodeProps) => {
             width: `${containerSize}px`,
             height: `${containerSize}px`
         }}>
-            {/* Diamante rotato - centrato nel container */}
+            {/* Diamante */}
             <div
                 className="glass-panel"
                 style={{
@@ -115,7 +183,7 @@ export const DecisionNode = ({ data }: NodeProps) => {
                 }}
             />
 
-            {/* Testo - centrato nel diamante */}
+            {/* Testo centrato */}
             <div style={{
                 position: 'absolute',
                 top: '50%',
@@ -132,7 +200,7 @@ export const DecisionNode = ({ data }: NodeProps) => {
                 <div style={{ fontSize: '0.9rem', lineHeight: '1.2' }}>{data.label}</div>
             </div>
 
-            {/* HANDLE TOP (Input) - vertice superiore */}
+            {/* HANDLE TOP (Input) */}
             <Handle
                 type="target"
                 position={Position.Top}
@@ -145,59 +213,60 @@ export const DecisionNode = ({ data }: NodeProps) => {
                 }}
             />
 
-            {/* HANDLE BOTTOM (True) - vertice inferiore */}
+            {/* HANDLE TRUE - posizione configurabile */}
             <Handle
                 type="source"
-                position={Position.Bottom}
+                position={trueCfg.rfPos}
                 id="true"
                 style={{
                     ...handleStyleLocal,
                     position: 'absolute',
-                    top: `${centerPoint + vertexDistance}px`,
-                    left: `${centerPoint}px`,
+                    top: `${trueCfg.top}px`,
+                    left: `${trueCfg.left}px`,
                     transform: 'translate(-50%, -50%)',
                     background: '#10b981',
                     border: '2px solid #059669'
                 }}
             />
 
-            {/* HANDLE RIGHT (False) - vertice destro */}
+            {/* HANDLE FALSE - posizione configurabile */}
             <Handle
                 type="source"
-                position={Position.Right}
+                position={falseCfg.rfPos}
                 id="false"
                 style={{
                     ...handleStyleLocal,
                     position: 'absolute',
-                    top: `${centerPoint}px`,
-                    left: `${centerPoint + vertexDistance}px`,
+                    top: `${falseCfg.top}px`,
+                    left: `${falseCfg.left}px`,
                     transform: 'translate(-50%, -50%)',
                     background: '#ef4444',
                     border: '2px solid #dc2626'
                 }}
             />
 
-            {/* Label TRUE - sotto handle bottom */}
+            {/* Label TRUE */}
             <div style={{
                 position: 'absolute',
-                top: `${centerPoint + vertexDistance + 15}px`,
-                left: '50%',
-                transform: 'translateX(-50%)',
+                top: `${trueCfg.labelTop}px`,
+                left: `${trueCfg.labelLeft}px`,
+                transform: trueCfg.labelTransform,
                 color: '#10b981',
                 fontWeight: 'bold',
                 fontSize: '0.8rem',
                 textShadow: '0 1px 2px rgba(0,0,0,0.3)',
-                pointerEvents: 'none'
+                pointerEvents: 'none',
+                whiteSpace: 'nowrap'
             }}>
                 {t('nodes.decisionTrue')}
             </div>
 
-            {/* Label FALSE - a destra handle right */}
+            {/* Label FALSE */}
             <div style={{
                 position: 'absolute',
-                top: '50%',
-                left: `${centerPoint + vertexDistance + 15}px`,
-                transform: 'translateY(-50%)',
+                top: `${falseCfg.labelTop}px`,
+                left: `${falseCfg.labelLeft}px`,
+                transform: falseCfg.labelTransform,
                 color: '#ef4444',
                 fontWeight: 'bold',
                 fontSize: '0.8rem',
@@ -213,6 +282,8 @@ export const DecisionNode = ({ data }: NodeProps) => {
 
 export const InputNode = ({ data }: NodeProps) => {
     const { t } = useTranslation();
+    const varName: string = data.variableName || '';
+    const prompt: string = data.prompt || '';
     return (
         <div style={{
             position: 'relative',
@@ -238,7 +309,14 @@ export const InputNode = ({ data }: NodeProps) => {
                         <Save size={14} color="white" />
                         <span style={{ color: 'white', fontSize: '11px', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.5px' }}>{t('nodes.input')}</span>
                     </div>
-                    <div style={{ color: 'white', fontWeight: 'bold', fontSize: '1.1rem' }}>{data.label}</div>
+                    {prompt ? (
+                        <div style={{ color: 'rgba(255,255,255,0.9)', fontSize: '0.78rem', fontStyle: 'italic', marginBottom: '4px' }}>
+                            "{prompt}"
+                        </div>
+                    ) : null}
+                    <div style={{ color: 'white', fontWeight: 'bold', fontSize: '1.1rem' }}>
+                        {varName ? `→ ${varName}` : (data.label || '—')}
+                    </div>
                 </div>
             </div>
             <Handle type="target" position={Position.Top} style={handleStyle} />
@@ -249,6 +327,9 @@ export const InputNode = ({ data }: NodeProps) => {
 
 export const OutputNode = ({ data }: NodeProps) => {
     const { t } = useTranslation();
+    const parts: OutputPart[] = Array.isArray(data.parts) ? data.parts : [];
+    const fallback: string = data.label || data.expression || '—';
+    const preview = parts.length > 0 ? previewOutput(parts) : fallback;
     return (
         <div style={{
             position: 'relative',
@@ -274,7 +355,7 @@ export const OutputNode = ({ data }: NodeProps) => {
                         <LogOut size={14} color="white" />
                         <span style={{ color: 'white', fontSize: '11px', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.5px' }}>{t('nodes.output')}</span>
                     </div>
-                    <div style={{ color: 'white', fontWeight: 'bold', fontSize: '1.1rem' }}>{data.label}</div>
+                    <div style={{ color: 'white', fontWeight: 'bold', fontSize: '1.05rem', wordBreak: 'break-word' }}>{preview}</div>
                 </div>
             </div>
             <Handle type="target" position={Position.Top} style={handleStyle} />

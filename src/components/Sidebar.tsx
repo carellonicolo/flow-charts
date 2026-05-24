@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Play, Square, ArrowRight, Save, LogOut, Diamond, HelpCircle, MessageSquare } from 'lucide-react';
+import { Play, Square, ArrowRight, Save, LogOut, Diamond, HelpCircle, MessageSquare, Variable } from 'lucide-react';
 import { useTranslation } from '../i18n/i18nContext';
 import {
     StartNodePreview,
@@ -153,6 +153,19 @@ export const Sidebar = ({ onOpenHelp }: SidebarProps) => {
                     usage: "Trascina questo blocco nell'editor come primo elemento del tuo programma. Da qui partirà l'esecuzione del tuo algoritmo.",
                     example: "Ogni flowchart inizia sempre con Start:\n\nStart → Process → End",
                     preview: <StartNodePreview />
+                }}
+                onHelp={openHelp}
+            />
+            <SidebarItem
+                type="declare"
+                label={t('sidebar.nodes.declare.label')}
+                description={t('sidebar.nodes.declare.description')}
+                icon={Variable}
+                color="#0ea5e9"
+                helpContent={{
+                    description: "Il blocco Dichiara introduce una nuova variabile specificandone il nome, il tipo (intero, decimale, stringa, booleano) e un valore iniziale opzionale.",
+                    usage: "Posiziona il blocco prima del primo utilizzo della variabile. Nelle proprietà scegli il nome e il tipo. Le variabili non dichiarate non possono essere usate negli altri blocchi.",
+                    example: "DECLARE x : INTEGER\nDECLARE nome : STRING\nDECLARE attivo : BOOLEAN := true"
                 }}
                 onHelp={openHelp}
             />

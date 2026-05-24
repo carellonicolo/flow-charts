@@ -1,13 +1,19 @@
 import type { Node, Edge } from 'reactflow';
+import { coerceValue, defaultInitialFor, type OutputPart, type VarType } from '../types/flow';
 
 export type LogCallback = (message: string) => void;
 export type InputCallback = (prompt: string) => Promise<string>;
 export type HighlightCallback = (nodeId: string | null) => void;
 
+interface VarSlot {
+    type: VarType;
+    value: number | string | boolean;
+}
+
 export class Executor {
     private nodes: Node[];
     private edges: Edge[];
-    private variables: Record<string, any> = {};
+    private vars: Record<string, VarSlot> = {};
     private log: LogCallback;
     private requestInput: InputCallback;
     private setHighlight: HighlightCallback;
@@ -34,7 +40,7 @@ export class Executor {
 
     async execute() {
         this.isRunning = true;
-        this.variables = {};
+        this.vars = {};
         this.log('Execution started...');
 
         const startNode = this.nodes.find(n => n.type === 'start');
@@ -47,7 +53,7 @@ export class Executor {
 
         while (currentNode && this.isRunning) {
             this.setHighlight(currentNode.id);
-            await this.delay(500); // Visual delay
+            await this.delay(500);
 
             try {
                 switch (currentNode.type) {
@@ -57,18 +63,21 @@ export class Executor {
                         this.log('Execution finished.');
                         this.isRunning = false;
                         break;
+                    case 'declare':
+                        this.executeDeclare(currentNode);
+                        break;
                     case 'process':
-                        await this.executeProcess(currentNode);
+                        this.executeProcess(currentNode);
                         break;
                     case 'input':
                         await this.executeInput(currentNode);
                         break;
                     case 'output':
-                        await this.executeOutput(currentNode);
+                        this.executeOutput(currentNode);
                         break;
                     case 'decision':
                         currentNode = this.executeDecision(currentNode);
-                        continue; // Decision determines next node explicitly
+                        continue;
                 }
             } catch (error: any) {
                 this.log(`Error: ${error.message}`);
@@ -84,69 +93,96 @@ export class Executor {
         this.setHighlight(null);
     }
 
-    private async executeProcess(node: Node) {
-        // Prefer structured data, fallback to label parsing
-        const expression = node.data.expression || node.data.label;
+    private executeDeclare(node: Node) {
+        const name: string = (node.data.variableName || '').trim();
+        const type: VarType = node.data.variableType || 'int';
+        if (!name) throw new Error('Blocco Dichiara senza nome di variabile');
+        if (Object.prototype.hasOwnProperty.call(this.vars, name)) {
+            throw new Error(`Variabile "${name}" già dichiarata`);
+        }
+        const initialRaw: string = node.data.initialValue || '';
+        const value = initialRaw.trim()
+            ? coerceValue(initialRaw, type)
+            : defaultInitialFor(type);
+        this.vars[name] = { type, value };
+        this.log(`Declare: ${name} : ${type} = ${this.formatValue(value)}`);
+    }
 
-        if (expression.includes('=')) {
+    private executeProcess(node: Node) {
+        const expression: string = node.data.expression || '';
+        if (!expression.trim()) {
+            this.log('Process: (espressione vuota, ignorato)');
+            return;
+        }
+        const explicitVar: string | undefined = node.data.variableName?.trim() || undefined;
+
+        if (expression.includes('=') && !explicitVar) {
             const [varName, valueExpr] = expression.split('=').map((s: string) => s.trim());
+            this.assertDeclared(varName);
             const value = this.evaluateExpression(valueExpr);
-            this.variables[varName] = value;
-            this.log(`Process: ${varName} = ${value}`);
+            this.assignValue(varName, value);
+            this.log(`Process: ${varName} = ${this.formatValue(this.vars[varName].value)}`);
+        } else if (explicitVar) {
+            this.assertDeclared(explicitVar);
+            const value = this.evaluateExpression(expression);
+            this.assignValue(explicitVar, value);
+            this.log(`Process: ${explicitVar} = ${this.formatValue(this.vars[explicitVar].value)}`);
         } else {
-            this.log(`Process: Executing ${expression}`);
+            this.evaluateExpression(expression);
+            this.log(`Process: ${expression}`);
         }
     }
 
     private async executeInput(node: Node) {
-        const varName = node.data.variableName || node.data.label;
-        const value = await this.requestInput(`Enter value for ${varName}:`);
-        const numValue = Number(value);
-        this.variables[varName] = isNaN(numValue) ? value : numValue;
-        this.log(`Input: ${varName} = ${this.variables[varName]}`);
+        const varName: string = (node.data.variableName || '').trim();
+        if (!varName) throw new Error('Blocco Input senza variabile assegnata');
+        this.assertDeclared(varName);
+        const slot = this.vars[varName];
+        const prompt = node.data.prompt || `Inserisci ${varName}`;
+        const raw = await this.requestInput(prompt);
+        const value = coerceValue(raw, slot.type);
+        slot.value = value;
+        this.log(`Input: ${varName} = ${this.formatValue(value)}`);
     }
 
-    private async executeOutput(node: Node) {
-        const expression = node.data.variableName || node.data.label;
-        let value;
-        if (expression.startsWith('"') || expression.startsWith("'")) {
-            value = expression.slice(1, -1);
-        } else if (this.variables.hasOwnProperty(expression)) {
-            value = this.variables[expression];
-        } else {
-            value = expression;
+    private executeOutput(node: Node) {
+        const parts: OutputPart[] = Array.isArray(node.data.parts) ? node.data.parts : [];
+        if (parts.length === 0) {
+            const legacy = node.data.expression;
+            if (legacy) {
+                const evaluated = this.evaluateExpression(legacy);
+                this.log(`Output: ${this.formatValue(evaluated)}`);
+            } else {
+                this.log('Output: (vuoto)');
+            }
+            return;
         }
-        this.log(`Output: ${value}`);
+        const text = parts
+            .map(p => {
+                if (p.kind === 'text') return p.value;
+                this.assertDeclared(p.value);
+                return this.formatValue(this.vars[p.value].value);
+            })
+            .join('');
+        this.log(`Output: ${text}`);
     }
 
     private executeDecision(node: Node): Node | undefined {
-        const condition = node.data.condition || node.data.label;
-        // Very simple evaluation: x > 5
-        // We'll replace variables with their values and eval
-        let evalCondition = condition;
-        for (const [key, val] of Object.entries(this.variables)) {
-            // Regex to replace whole words only
-            const regex = new RegExp(`\\b${key}\\b`, 'g');
-            evalCondition = evalCondition.replace(regex, typeof val === 'string' ? `"${val}"` : val);
-        }
-
+        const condition: string = node.data.condition || node.data.label || '';
         let result = false;
         try {
-            // eslint-disable-next-line no-new-func
-            result = new Function(`return ${evalCondition}`)();
+            result = !!this.evaluateExpression(condition);
             this.log(`Decision: ${condition} is ${result}`);
         } catch (e) {
             this.log(`Error evaluating condition: ${condition}`);
             throw e;
         }
 
-        // Find edges
         const trueEdge = this.edges.find(e => e.source === node.id && e.sourceHandle === 'true');
         const falseEdge = this.edges.find(e => e.source === node.id && e.sourceHandle === 'false');
 
         const nextEdge = result ? trueEdge : falseEdge;
         if (!nextEdge) return undefined;
-
         return this.nodes.find(n => n.id === nextEdge.target);
     }
 
@@ -156,18 +192,50 @@ export class Executor {
         return this.nodes.find(n => n.id === edge.target);
     }
 
+    private assertDeclared(name: string) {
+        if (!Object.prototype.hasOwnProperty.call(this.vars, name)) {
+            throw new Error(`Variabile "${name}" non dichiarata. Aggiungi un blocco Dichiara prima.`);
+        }
+    }
+
+    private assignValue(name: string, value: any) {
+        const slot = this.vars[name];
+        if (slot.type === 'int') {
+            const n = Number(value);
+            if (!Number.isFinite(n)) throw new Error(`Valore non numerico per "${name}"`);
+            slot.value = Math.trunc(n);
+        } else if (slot.type === 'float') {
+            const n = Number(value);
+            if (!Number.isFinite(n)) throw new Error(`Valore non numerico per "${name}"`);
+            slot.value = n;
+        } else if (slot.type === 'bool') {
+            slot.value = !!value;
+        } else {
+            slot.value = String(value);
+        }
+    }
+
     private evaluateExpression(expr: string): any {
         let evalExpr = expr;
-        for (const [key, val] of Object.entries(this.variables)) {
-            const regex = new RegExp(`\\b${key}\\b`, 'g');
-            evalExpr = evalExpr.replace(regex, typeof val === 'string' ? `"${val}"` : val);
+        const sortedNames = Object.keys(this.vars).sort((a, b) => b.length - a.length);
+        for (const name of sortedNames) {
+            const val = this.vars[name].value;
+            const regex = new RegExp(`\\b${name}\\b`, 'g');
+            const replacement = typeof val === 'string' ? JSON.stringify(val) : String(val);
+            evalExpr = evalExpr.replace(regex, replacement);
         }
         try {
             // eslint-disable-next-line no-new-func
-            return new Function(`return ${evalExpr}`)();
-        } catch (e) {
-            return expr; // Fallback to string literal if eval fails
+            return new Function(`return (${evalExpr})`)();
+        } catch (e: any) {
+            throw new Error(`Espressione non valida: "${expr}" (${e.message})`);
         }
+    }
+
+    private formatValue(v: number | string | boolean): string {
+        if (typeof v === 'string') return v;
+        if (typeof v === 'boolean') return v ? 'true' : 'false';
+        return String(v);
     }
 
     private delay(ms: number) {
