@@ -4,8 +4,7 @@
  */
 
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import { type EdgeProps, BaseEdge, EdgeLabelRenderer, Position, getSmoothStepPath, useReactFlow } from 'reactflow';
-import { Trash, Trash2 } from 'lucide-react';
+import { type EdgeProps, BaseEdge, Position, getSmoothStepPath, useReactFlow } from 'reactflow';
 import { type WaypointEdgeData, type Waypoint } from '../types/waypoint';
 
 /**
@@ -60,16 +59,19 @@ interface WaypointCircleProps {
   isSelected: boolean;
   onSelect: () => void;
   onDrag: (waypointId: string, x: number, y: number) => void;
+  onRemove: () => void;
 }
 
 /**
- * Draggable circle representing a waypoint on the edge
+ * Draggable circle representing a waypoint on the edge.
+ * Double-click removes the waypoint.
  */
 const WaypointCircle: React.FC<WaypointCircleProps> = ({
   waypoint,
   isSelected,
   onSelect,
-  onDrag
+  onDrag,
+  onRemove,
 }) => {
   const { screenToFlowPosition } = useReactFlow();
   const isDraggingRef = useRef(false);
@@ -123,71 +125,23 @@ const WaypointCircle: React.FC<WaypointCircleProps> = ({
       strokeWidth={2}
       onMouseDown={handleMouseDown}
       onClick={(e) => { e.stopPropagation(); e.preventDefault(); onSelect(); }}
+      onDoubleClick={(e) => { e.stopPropagation(); e.preventDefault(); onRemove(); }}
       style={{
         cursor: isDragging ? 'grabbing' : 'grab',
         pointerEvents: 'all'
       }}
       className="waypoint-circle nodrag nopan"
-    />
-  );
-};
-
-/**
- * Props for TrashIcon component
- */
-interface TrashIconProps {
-  position: Waypoint;
-  onDelete: () => void;
-}
-
-/**
- * Trash icon button for deleting a waypoint
- */
-const TrashIcon: React.FC<TrashIconProps> = ({ position, onDelete }) => {
-  // Position icon to the right of the waypoint
-  const iconX = position.x + 15;
-  const iconY = position.y - 10;
-
-  return (
-    <foreignObject
-      x={iconX - 14}
-      y={iconY - 14}
-      width={28}
-      height={28}
-      style={{ overflow: 'visible', pointerEvents: 'none' }}
     >
-      <div
-        onClick={(e) => {
-          e.stopPropagation();
-          onDelete();
-        }}
-        className="trash-icon-container"
-        style={{
-          width: '28px',
-          height: '28px',
-          borderRadius: '50%',
-          border: '2px solid #ef4444',
-          backgroundColor: 'white',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          cursor: 'pointer',
-          pointerEvents: 'all',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-        }}
-      >
-        <Trash
-          size={16}
-          color="#ef4444"
-        />
-      </div>
-    </foreignObject>
+      <title>Trascina per spostare · Doppio click per eliminare</title>
+    </circle>
   );
 };
 
 /**
  * Main WaypointEdge component
- * Custom edge with support for waypoints/control points
+ * Custom edge with support for waypoints/control points.
+ * Waypoints can be removed by double-clicking on them. Edges are removed
+ * by selecting them and pressing Backspace/Delete (handled in FlowEditor).
  */
 export const WaypointEdge: React.FC<EdgeProps<WaypointEdgeData>> = ({
   id,
@@ -198,7 +152,6 @@ export const WaypointEdge: React.FC<EdgeProps<WaypointEdgeData>> = ({
   sourcePosition,
   targetPosition,
   data,
-  selected,
   markerEnd,
   style
 }) => {
@@ -210,7 +163,8 @@ export const WaypointEdge: React.FC<EdgeProps<WaypointEdgeData>> = ({
   // Smooth-step path that respects the entry/exit direction from the handles.
   // This is what makes Decision edges automatically reorient when the user
   // moves the True/False outputs to left/right/bottom.
-  const [smoothPath, smoothLabelX, smoothLabelY] = useMemo(() => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [smoothPath, _labelX, _labelY] = useMemo(() => {
     const dx = targetX - sourceX;
     const dy = targetY - sourceY;
     const sp = sourcePosition || Position.Bottom;
@@ -250,19 +204,6 @@ export const WaypointEdge: React.FC<EdgeProps<WaypointEdgeData>> = ({
     });
   }, [sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition]);
 
-  // Center point for the trash button: midpoint of the path
-  const centerPoint = useMemo(() => {
-    if (waypoints.length > 0) {
-      const sorted = [...waypoints].sort((a, b) => a.index - b.index);
-      const mid = sorted[Math.floor(sorted.length / 2)];
-      return { x: mid.x, y: mid.y };
-    }
-    return { x: smoothLabelX, y: smoothLabelY };
-  }, [waypoints, smoothLabelX, smoothLabelY]);
-
-  const handleDeleteEdge = useCallback(() => {
-    setEdges(eds => eds.filter(e => e.id !== id));
-  }, [id, setEdges]);
 
   // Deselect waypoint when clicking outside the edge
   useEffect(() => {
@@ -386,7 +327,7 @@ export const WaypointEdge: React.FC<EdgeProps<WaypointEdgeData>> = ({
         className="waypoint-edge-hitarea"
       />
 
-      {/* Waypoint circles */}
+      {/* Waypoint circles — double-click to remove */}
       {waypoints.map(wp => (
         <WaypointCircle
           key={wp.id}
@@ -394,66 +335,9 @@ export const WaypointEdge: React.FC<EdgeProps<WaypointEdgeData>> = ({
           isSelected={selectedWaypoint === wp.id}
           onSelect={() => setSelectedWaypoint(wp.id)}
           onDrag={handleWaypointDrag}
+          onRemove={() => handleDeleteWaypoint(wp.id)}
         />
       ))}
-
-      {/* Trash icon for selected waypoint */}
-      {selectedWaypoint && (
-        <TrashIcon
-          position={waypoints.find(wp => wp.id === selectedWaypoint)!}
-          onDelete={() => handleDeleteWaypoint(selectedWaypoint)}
-        />
-      )}
-
-      {/* Trash icon for the selected edge itself, anchored at its midpoint */}
-      {selected && !selectedWaypoint && (
-        <EdgeLabelRenderer>
-          <div
-            className="nodrag nopan"
-            style={{
-              position: 'absolute',
-              transform: `translate(-50%, -50%) translate(${centerPoint.x}px, ${centerPoint.y}px)`,
-              pointerEvents: 'all',
-              zIndex: 10,
-            }}
-          >
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDeleteEdge();
-              }}
-              title="Elimina connessione"
-              style={{
-                width: '30px',
-                height: '30px',
-                borderRadius: '50%',
-                border: '2px solid #ef4444',
-                background: 'var(--bg-color)',
-                color: '#ef4444',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 4px 12px rgba(239, 68, 68, 0.45)',
-                transition: 'all 0.18s',
-                padding: 0,
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = '#ef4444';
-                e.currentTarget.style.color = 'white';
-                e.currentTarget.style.transform = 'scale(1.08)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'var(--bg-color)';
-                e.currentTarget.style.color = '#ef4444';
-                e.currentTarget.style.transform = 'scale(1)';
-              }}
-            >
-              <Trash2 size={15} />
-            </button>
-          </div>
-        </EdgeLabelRenderer>
-      )}
     </g>
   );
 };

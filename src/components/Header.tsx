@@ -1,4 +1,4 @@
-import { Menu, Play, Square, Terminal, Sun, Moon, Github, Globe, ChevronDown, HelpCircle, Library, Trash2, BookOpen, Star, Brain, Trophy, Palette, Download, Workflow, FileCode, Undo2, Redo2, Upload } from 'lucide-react';
+import { Menu, Terminal, Sun, Moon, Github, Globe, ChevronDown, HelpCircle, Library, BookOpen, Star, Brain, Trophy, Palette } from 'lucide-react';
 import { useTranslation, type Language } from '../i18n/i18nContext';
 import { useState, useRef, useEffect } from 'react';
 import { HelpModal } from './HelpModal';
@@ -8,16 +8,6 @@ import { ExerciseViewModal } from './ExerciseViewModal';
 interface HeaderProps {
   theme: 'light' | 'dark';
   onToggleTheme: () => void;
-  isExecuting: boolean;
-  onRun: () => void;
-  onDownloadPDF?: () => void;
-  onDownloadPNG?: () => void;
-  onDownloadJPEG?: () => void;
-  onDownloadPseudoTxt?: () => void;
-  onDownloadPseudoPdf?: () => void;
-  onDownloadJSON?: () => void;
-  onImportJSON?: (file: File) => void;
-  onClear?: () => void;
   onToggleSidebar: () => void;
   isConsoleOpen: boolean;
   onToggleConsole: () => void;
@@ -25,27 +15,11 @@ interface HeaderProps {
   onStartExercise: (description: string) => void;
   colorTheme: string;
   onColorThemeChange: (theme: string) => void;
-  viewMode: 'flowchart' | 'pseudocode';
-  onChangeViewMode: (mode: 'flowchart' | 'pseudocode') => void;
-  onUndo?: () => void;
-  onRedo?: () => void;
-  canUndo?: boolean;
-  canRedo?: boolean;
 }
 
 export const Header = ({
   theme,
   onToggleTheme,
-  isExecuting,
-  onRun,
-  onDownloadPDF,
-  onDownloadPNG,
-  onDownloadJPEG,
-  onDownloadPseudoTxt,
-  onDownloadPseudoPdf,
-  onDownloadJSON,
-  onImportJSON,
-  onClear,
   onToggleSidebar,
   isConsoleOpen,
   onToggleConsole,
@@ -53,27 +27,18 @@ export const Header = ({
   onStartExercise,
   colorTheme,
   onColorThemeChange,
-  viewMode,
-  onChangeViewMode,
-  onUndo,
-  onRedo,
-  canUndo,
-  canRedo,
 }: HeaderProps) => {
   const { t, language, changeLanguage } = useTranslation();
   const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
   const [isExampleDropdownOpen, setIsExampleDropdownOpen] = useState(false);
   const [isExerciseDropdownOpen, setIsExerciseDropdownOpen] = useState(false);
   const [isColorDropdownOpen, setIsColorDropdownOpen] = useState(false);
-  const [isDownloadDropdownOpen, setIsDownloadDropdownOpen] = useState(false);
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
   const languageDropdownRef = useRef<HTMLDivElement>(null);
   const exampleDropdownRef = useRef<HTMLDivElement>(null);
   const exerciseDropdownRef = useRef<HTMLDivElement>(null);
   const colorDropdownRef = useRef<HTMLDivElement>(null);
-  const downloadDropdownRef = useRef<HTMLDivElement>(null);
-  const importFileInputRef = useRef<HTMLInputElement>(null);
 
   const languages: { code: Language; label: string; flag: string }[] = [
     { code: 'it', label: 'Italiano', flag: '🇮🇹' },
@@ -100,9 +65,6 @@ export const Header = ({
       }
       if (colorDropdownRef.current && !colorDropdownRef.current.contains(target)) {
         setIsColorDropdownOpen(false);
-      }
-      if (downloadDropdownRef.current && !downloadDropdownRef.current.contains(target)) {
-        setIsDownloadDropdownOpen(false);
       }
     };
 
@@ -164,165 +126,6 @@ export const Header = ({
         >
           <Menu size={20} />
         </button>
-
-        {/* Center Section: Command Capsule */}
-        <div className="command-capsule-wrapper">
-          <div className="command-capsule">
-            <div className={`status-led ${isExecuting ? 'active' : ''}`} />
-
-            <div className="view-mode-toggle" title={t('viewMode.toggleTitle')}>
-              <button
-                type="button"
-                className={`view-mode-btn ${viewMode === 'flowchart' ? 'active' : ''}`}
-                onClick={() => onChangeViewMode('flowchart')}
-                title={t('viewMode.flowchart')}
-              >
-                <Workflow size={14} />
-                <span className="btn-label">{t('viewMode.flowchart')}</span>
-              </button>
-              <button
-                type="button"
-                className={`view-mode-btn ${viewMode === 'pseudocode' ? 'active' : ''}`}
-                onClick={() => onChangeViewMode('pseudocode')}
-                title={t('viewMode.pseudocode')}
-              >
-                <FileCode size={14} />
-                <span className="btn-label">{t('viewMode.pseudocode')}</span>
-              </button>
-            </div>
-
-            <div className="capsule-divider" />
-
-            <button
-              type="button"
-              className="capsule-btn secondary"
-              onClick={onUndo}
-              disabled={!canUndo}
-              title={`${language === 'it' ? 'Annulla' : 'Undo'} (Ctrl+Z)`}
-              style={{ opacity: canUndo ? 1 : 0.4 }}
-            >
-              <Undo2 size={16} />
-            </button>
-            <button
-              type="button"
-              className="capsule-btn secondary"
-              onClick={onRedo}
-              disabled={!canRedo}
-              title={`${language === 'it' ? 'Ripeti' : 'Redo'} (Ctrl+Shift+Z)`}
-              style={{ opacity: canRedo ? 1 : 0.4 }}
-            >
-              <Redo2 size={16} />
-            </button>
-
-            <div className="capsule-divider" />
-
-            <div ref={downloadDropdownRef} className="download-wrapper">
-              <button
-                className={`capsule-btn secondary ${isDownloadDropdownOpen ? 'active' : ''}`}
-                onClick={() => setIsDownloadDropdownOpen(!isDownloadDropdownOpen)}
-                title={language === 'it' ? 'Esporta Flowchart' : 'Export Flowchart'}
-                disabled={isExecuting}
-              >
-                <Download size={16} />
-                <ChevronDown size={12} style={{
-                  opacity: 0.5,
-                  transform: isDownloadDropdownOpen ? 'rotate(180deg)' : 'none',
-                  transition: 'transform 0.2s ease'
-                }} />
-              </button>
-
-              {isDownloadDropdownOpen && (
-                <div className="download-dropdown">
-                  <button className="dropdown-item" onClick={() => { onDownloadPDF?.(); setIsDownloadDropdownOpen(false); }}>
-                    <div className="item-icon pdf">PDF</div>
-                    <div className="item-info">
-                      <span className="item-label">Documento PDF</span>
-                      <span className="item-desc">{language === 'it' ? 'Migliore per la stampa' : 'Best for printing'}</span>
-                    </div>
-                  </button>
-                  <button className="dropdown-item" onClick={() => { onDownloadPNG?.(); setIsDownloadDropdownOpen(false); }}>
-                    <div className="item-icon png">PNG</div>
-                    <div className="item-info">
-                      <span className="item-label">Immagine PNG</span>
-                      <span className="item-desc">{language === 'it' ? 'Sfondo trasparente' : 'Transparent background'}</span>
-                    </div>
-                  </button>
-                  <button className="dropdown-item" onClick={() => { onDownloadJPEG?.(); setIsDownloadDropdownOpen(false); }}>
-                    <div className="item-icon jpeg">JPEG</div>
-                    <div className="item-info">
-                      <span className="item-label">Immagine JPEG</span>
-                      <span className="item-desc">{language === 'it' ? 'File leggero/compatto' : 'Smaller file size'}</span>
-                    </div>
-                  </button>
-                  <div style={{ height: '1px', background: 'var(--glass-border)', margin: '6px 0' }} />
-                  <button className="dropdown-item" onClick={() => { onDownloadPseudoTxt?.(); setIsDownloadDropdownOpen(false); }}>
-                    <div className="item-icon txt">TXT</div>
-                    <div className="item-info">
-                      <span className="item-label">{t('pseudocode.exportTxt')}</span>
-                      <span className="item-desc">{t('pseudocode.exportTxtDesc')}</span>
-                    </div>
-                  </button>
-                  <button className="dropdown-item" onClick={() => { onDownloadPseudoPdf?.(); setIsDownloadDropdownOpen(false); }}>
-                    <div className="item-icon pseudo-pdf">PDF</div>
-                    <div className="item-info">
-                      <span className="item-label">{t('pseudocode.exportPdf')}</span>
-                      <span className="item-desc">{t('pseudocode.exportPdfDesc')}</span>
-                    </div>
-                  </button>
-                  <div style={{ height: '1px', background: 'var(--glass-border)', margin: '6px 0' }} />
-                  <button className="dropdown-item" onClick={() => { onDownloadJSON?.(); setIsDownloadDropdownOpen(false); }}>
-                    <div className="item-icon json">{'{ }'}</div>
-                    <div className="item-info">
-                      <span className="item-label">{language === 'it' ? 'Salva progetto (JSON)' : 'Save project (JSON)'}</span>
-                      <span className="item-desc">{language === 'it' ? 'Per riprenderlo in seguito' : 'Reload later to keep editing'}</span>
-                    </div>
-                  </button>
-                  <button className="dropdown-item" onClick={() => { importFileInputRef.current?.click(); setIsDownloadDropdownOpen(false); }}>
-                    <div className="item-icon json-import"><Upload size={14} /></div>
-                    <div className="item-info">
-                      <span className="item-label">{language === 'it' ? 'Carica progetto (JSON)' : 'Load project (JSON)'}</span>
-                      <span className="item-desc">{language === 'it' ? 'Importa un flowchart salvato' : 'Import a saved flowchart'}</span>
-                    </div>
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <input
-              ref={importFileInputRef}
-              type="file"
-              accept="application/json,.json"
-              style={{ display: 'none' }}
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) onImportJSON?.(f);
-                e.target.value = '';
-              }}
-            />
-
-            <div className="capsule-divider" />
-
-            <button
-              className={`capsule-btn primary ${isExecuting ? 'executing' : ''}`}
-              onClick={onRun}
-              title={isExecuting ? t('header.stopFlowTitle') : t('header.runFlowTitle')}
-            >
-              {isExecuting ? <Square size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />}
-              <span className="btn-label">{isExecuting ? t('header.stopFlow') : t('header.runFlow')}</span>
-            </button>
-
-            <div className="capsule-divider" />
-
-            <button
-              className="capsule-btn secondary"
-              onClick={onClear}
-              title={t('sidebar.clear')}
-              disabled={isExecuting}
-            >
-              <Trash2 size={16} />
-            </button>
-          </div>
-        </div>
 
         {/* Mobile Console Toggle */}
         <button

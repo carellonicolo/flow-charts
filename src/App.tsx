@@ -6,6 +6,7 @@ import { FlowEditor } from './components/FlowEditor';
 import { Console } from './components/Console';
 import { Sidebar, type HelpContent } from './components/Sidebar';
 import { Header } from './components/Header';
+import { CommandBar } from './components/CommandBar';
 import { HelpModal } from './components/HelpModal';
 import { Toast } from './components/Toast';
 import { PseudocodeView } from './components/PseudocodeView';
@@ -13,6 +14,8 @@ import { Executor } from './engine/Executor';
 import { validateFlowSyntax, formatValidationMessage } from './utils/flowValidation';
 import { buildPseudocodeProgram } from './utils/pseudocode';
 import { useFlowHistory } from './utils/useFlowHistory';
+import { useShortcuts } from './utils/useShortcuts';
+import { ShortcutsHelp } from './components/ShortcutsHelp';
 import './styles/main.css';
 
 function AppContent() {
@@ -41,10 +44,47 @@ function AppContent() {
   // View mode
   const [viewMode, setViewMode] = useState<'flowchart' | 'pseudocode'>('flowchart');
 
+  // Shortcuts help dialog
+  const [shortcutsHelpOpen, setShortcutsHelpOpen] = useState(false);
+
+  // Hidden file input for Cmd+O
+  const openInputRef = useRef<HTMLInputElement>(null);
+
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
 
   const { undo, redo, canUndo, canRedo } = useFlowHistory(nodes, edges, setNodes, setEdges);
+
+  const duplicateSelectedNodes = () => {
+    const selected = nodes.filter(n => n.selected);
+    if (selected.length === 0) return;
+    const offset = { x: 40, y: 40 };
+    const stamp = Date.now();
+    const dupes = selected.map((n, i) => ({
+      ...n,
+      id: `${n.id}_dup_${stamp}_${i}`,
+      position: { x: n.position.x + offset.x, y: n.position.y + offset.y },
+      selected: false,
+      data: { ...n.data },
+    }));
+    setNodes([...nodes.map(n => ({ ...n, selected: false })), ...dupes]);
+  };
+
+  useShortcuts({
+    onSave: () => handleDownloadJSON(),
+    onOpen: () => openInputRef.current?.click(),
+    onRunToggle: () => handleRun(),
+    onClear: () => handleClear(),
+    onDuplicate: duplicateSelectedNodes,
+    onViewFlowchart: () => setViewMode('flowchart'),
+    onViewPseudocode: () => setViewMode('pseudocode'),
+    onEscape: () => {
+      setNodes(nds => nds.map(n => ({ ...n, selected: false })));
+      setEdges(eds => eds.map(e => ({ ...e, selected: false })));
+      setShortcutsHelpOpen(false);
+    },
+    onHelp: () => setShortcutsHelpOpen(o => !o),
+  });
 
   const executorRef = useRef<Executor | null>(null);
   const consoleRef = useRef<any>(null);
@@ -520,27 +560,11 @@ function AppContent() {
         onToggleTheme={toggleTheme}
         colorTheme={colorTheme}
         onColorThemeChange={setColorTheme}
-        isExecuting={isExecuting}
-        onRun={handleRun}
-        onDownloadPDF={handleDownloadPDF}
-        onDownloadPNG={handleDownloadPNG}
-        onDownloadJPEG={handleDownloadJPEG}
-        onDownloadPseudoTxt={handleDownloadPseudoTxt}
-        onDownloadPseudoPdf={handleDownloadPseudoPdf}
-        onDownloadJSON={handleDownloadJSON}
-        onImportJSON={handleImportJSON}
-        onClear={handleClear}
         onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         isConsoleOpen={isConsoleOpen}
         onToggleConsole={() => setIsConsoleOpen(!isConsoleOpen)}
         onLoadExample={loadExample}
         onStartExercise={handleStartExercise}
-        viewMode={viewMode}
-        onChangeViewMode={setViewMode}
-        onUndo={undo}
-        onRedo={redo}
-        canUndo={canUndo}
-        canRedo={canRedo}
       />
 
       <div className="main-content">
@@ -571,6 +595,25 @@ function AppContent() {
             />
           )}
 
+          <CommandBar
+            isExecuting={isExecuting}
+            onRun={handleRun}
+            onClear={handleClear}
+            onUndo={undo}
+            onRedo={redo}
+            canUndo={canUndo}
+            canRedo={canRedo}
+            viewMode={viewMode}
+            onChangeViewMode={setViewMode}
+            onDownloadPDF={handleDownloadPDF}
+            onDownloadPNG={handleDownloadPNG}
+            onDownloadJPEG={handleDownloadJPEG}
+            onDownloadPseudoTxt={handleDownloadPseudoTxt}
+            onDownloadPseudoPdf={handleDownloadPseudoPdf}
+            onDownloadJSON={handleDownloadJSON}
+            onImportJSON={handleImportJSON}
+          />
+
           <div className={`console-container ${isConsoleOpen ? 'open' : ''}`}>
             <Console
               ref={consoleRef}
@@ -593,6 +636,21 @@ function AppContent() {
         onClose={() => setHelpModalOpen(false)}
         title={helpModalTitle}
         content={helpModalContent}
+      />
+      <ShortcutsHelp
+        isOpen={shortcutsHelpOpen}
+        onClose={() => setShortcutsHelpOpen(false)}
+      />
+      <input
+        ref={openInputRef}
+        type="file"
+        accept="application/json,.json"
+        style={{ display: 'none' }}
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) handleImportJSON(f);
+          e.target.value = '';
+        }}
       />
     </div>
   );

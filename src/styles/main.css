@@ -399,30 +399,42 @@ body {
   cursor: grabbing !important;
 }
 
-/* React Flow Node - High Quality Rendering */
+/* React Flow Node - High Quality Rendering
+   - subpixel-antialiased keeps text sharp when the viewport is scaled
+   - each node gets its own GPU compositing layer so the browser can rasterize
+     it at the zoom-aware scale instead of upscaling a low-res bitmap. */
 .react-flow__node {
   image-rendering: auto;
-  /* Allow browser to smooth images/containers */
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: subpixel-antialiased;
+  -moz-osx-font-smoothing: auto;
+  text-rendering: geometricPrecision;
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
-/* Force high quality rendering for all child elements */
 .react-flow__node * {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: subpixel-antialiased;
+  -moz-osx-font-smoothing: auto;
+  text-rendering: geometricPrecision;
+}
+
+/* backdrop-filter rasterizes the blurred backdrop as a bitmap, which then
+   becomes fuzzy as soon as React Flow scales the viewport. Disable it inside
+   nodes — the gradient backgrounds give enough depth without it. */
+.react-flow__node .glass-panel,
+.react-flow__node .comment-node {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 /* React Flow Edges - High Quality SVG Rendering */
 .react-flow__edge-path {
   shape-rendering: geometricPrecision;
   vector-effect: non-scaling-stroke;
-  /* Ensure stroke width stays consistent and smooth */
 }
 
-/* Ensure transforms maintain quality */
 .react-flow__viewport {
   image-rendering: auto;
 }
@@ -1058,6 +1070,121 @@ body {
   .properties-side-panel .properties-toolbar {
     width: auto !important;
   }
+}
+
+/* Floating Command Bar (bottom of editor) */
+.floating-command-bar {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px;
+  background: var(--bg-color);
+  border: 1px solid var(--glass-border);
+  border-radius: 100px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+  z-index: 40;
+}
+
+[data-theme='light'] .floating-command-bar {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.mini-status-led {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #6b7280;
+  margin: 0 4px;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.mini-status-led.active {
+  background: #10b981;
+  box-shadow: 0 0 6px #10b981;
+}
+
+.mini-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  border-radius: 100px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.mini-btn:hover:not(:disabled) {
+  background: rgba(99, 102, 241, 0.12);
+  color: var(--text-color);
+}
+
+.mini-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.mini-btn.active {
+  background: var(--primary-color);
+  color: white;
+}
+
+.mini-btn.run {
+  background: var(--primary-color);
+  color: white;
+  width: 32px;
+  height: 32px;
+}
+
+.mini-btn.run:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+
+.mini-btn.run.executing {
+  background: #ef4444;
+  animation: pulse-red 2s infinite;
+}
+
+.mini-btn.danger:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.mini-divider {
+  width: 1px;
+  height: 18px;
+  background: var(--glass-border);
+  margin: 0 2px;
+  flex-shrink: 0;
+}
+
+.view-mode-toggle.compact {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 100px;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+[data-theme='light'] .view-mode-toggle.compact {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.view-mode-toggle.compact .mini-btn {
+  width: 26px;
+  height: 26px;
 }
 
 /* View Mode Segmented Toggle inside command capsule */

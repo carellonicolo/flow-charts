@@ -1,10 +1,11 @@
 import React, { useMemo, useState } from 'react';
 import { type Node, type Edge } from 'reactflow';
-import { Trash2, Pencil, Plus, X } from 'lucide-react';
+import { Trash2, Pencil, Plus, X, Copy, Check } from 'lucide-react';
 import { useTranslation } from '../i18n/i18nContext';
 import { structureFlow, type PseudoLine } from '../utils/pseudocode';
 import { defaultDataForType } from '../types/flow';
 import { PropertiesPanelInline } from './PropertiesPanel';
+import { generateCode, LANG_LABELS, type TargetLang } from '../utils/codegen';
 
 interface PseudocodeViewProps {
     nodes: Node[];
@@ -18,11 +19,17 @@ let pseudoId = 0;
 const newId = () => `pseudo_${Date.now()}_${pseudoId++}`;
 
 export const PseudocodeView: React.FC<PseudocodeViewProps> = ({ nodes, edges, setNodes, setEdges }) => {
-    const { t } = useTranslation();
+    const { t, language } = useTranslation();
     const [editingId, setEditingId] = useState<string | null>(null);
     const [insertingAfter, setInsertingAfter] = useState<string | null>(null);
+    const [currentLang, setCurrentLang] = useState<TargetLang>('python');
 
     const lines = useMemo(() => structureFlow(nodes, edges), [nodes, edges]);
+
+    const generatedCode = useMemo(
+        () => generateCode(nodes, edges, currentLang),
+        [nodes, edges, currentLang],
+    );
 
     const handleDelete = (nodeId: string) => {
         const incoming = edges.filter(e => e.target === nodeId);
@@ -164,9 +171,166 @@ export const PseudocodeView: React.FC<PseudocodeViewProps> = ({ nodes, edges, se
                     decoration="keyword"
                 />
             </div>
+
+            <CodeTranslationPanel
+                lang={currentLang}
+                onChangeLang={setCurrentLang}
+                code={generatedCode}
+                language={language}
+            />
         </div>
     );
 };
+
+interface CodeTranslationPanelProps {
+    lang: TargetLang;
+    onChangeLang: (l: TargetLang) => void;
+    code: string;
+    language: 'it' | 'en';
+}
+
+const CodeTranslationPanel: React.FC<CodeTranslationPanelProps> = ({ lang, onChangeLang, code, language }) => {
+    const [copied, setCopied] = useState(false);
+    const langs: TargetLang[] = ['python', 'java', 'c', 'cpp'];
+
+    const handleCopy = async () => {
+        try {
+            await navigator.clipboard.writeText(code);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1500);
+        } catch { /* ignore */ }
+    };
+
+    return (
+        <div style={{
+            maxWidth: '900px',
+            margin: '20px auto 0',
+            background: 'var(--glass-bg)',
+            border: '1px solid var(--glass-border)',
+            borderRadius: '12px',
+            overflow: 'hidden',
+        }}>
+            <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '10px 16px',
+                borderBottom: '1px solid var(--glass-border)',
+                background: 'rgba(0,0,0,0.15)',
+            }}>
+                <span style={{
+                    fontSize: '0.85rem',
+                    fontWeight: 700,
+                    color: 'var(--text-secondary)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                    fontFamily: 'system-ui, sans-serif',
+                    marginRight: '4px',
+                }}>
+                    {language === 'it' ? 'Codice equivalente' : 'Equivalent code'}
+                </span>
+                <div style={{ display: 'flex', gap: '4px', padding: '2px', borderRadius: '100px', background: 'rgba(0,0,0,0.25)' }}>
+                    {langs.map(l => (
+                        <button
+                            key={l}
+                            onClick={() => onChangeLang(l)}
+                            style={{
+                                border: 'none',
+                                padding: '4px 12px',
+                                borderRadius: '100px',
+                                background: lang === l ? 'var(--primary-color)' : 'transparent',
+                                color: lang === l ? 'white' : 'var(--text-secondary)',
+                                fontSize: '0.78rem',
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                                fontFamily: 'system-ui, sans-serif',
+                                transition: 'all 0.15s',
+                            }}
+                        >{LANG_LABELS[l]}</button>
+                    ))}
+                </div>
+                <button
+                    onClick={handleCopy}
+                    title={language === 'it' ? 'Copia codice' : 'Copy code'}
+                    style={{
+                        marginLeft: 'auto',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '5px',
+                        padding: '5px 10px',
+                        background: copied ? 'rgba(16, 185, 129, 0.18)' : 'transparent',
+                        color: copied ? '#10b981' : 'var(--text-secondary)',
+                        border: '1px solid var(--glass-border)',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontSize: '0.78rem',
+                        fontWeight: 600,
+                        fontFamily: 'system-ui, sans-serif',
+                        transition: 'all 0.15s',
+                    }}
+                >
+                    {copied ? <Check size={13} /> : <Copy size={13} />}
+                    {copied ? (language === 'it' ? 'Copiato' : 'Copied') : (language === 'it' ? 'Copia' : 'Copy')}
+                </button>
+            </div>
+            <pre style={{
+                margin: 0,
+                padding: '16px 20px',
+                fontFamily: 'Menlo, Monaco, "Fira Code", monospace',
+                fontSize: '0.85rem',
+                lineHeight: 1.55,
+                color: 'var(--text-color)',
+                whiteSpace: 'pre',
+                overflowX: 'auto',
+            }}>
+                <code>{highlightCode(code, lang)}</code>
+            </pre>
+        </div>
+    );
+};
+
+// Lightweight keyword highlighter — no external dep, just span coloring.
+const KEYWORDS: Record<TargetLang, string[]> = {
+    python: ['if', 'else', 'elif', 'while', 'for', 'def', 'return', 'True', 'False', 'None', 'in', 'and', 'or', 'not', 'break', 'continue', 'import', 'from', 'as', 'pass', 'print', 'input', 'int', 'float', 'str', 'bool'],
+    java: ['public', 'private', 'class', 'static', 'void', 'main', 'String', 'int', 'double', 'float', 'boolean', 'true', 'false', 'if', 'else', 'while', 'do', 'for', 'return', 'new', 'import', 'package'],
+    c: ['int', 'double', 'float', 'char', 'bool', 'void', 'if', 'else', 'while', 'do', 'for', 'return', 'true', 'false', '#include'],
+    cpp: ['int', 'double', 'float', 'char', 'bool', 'void', 'if', 'else', 'while', 'do', 'for', 'return', 'true', 'false', 'std', '#include', 'using', 'namespace', 'class', 'public', 'private'],
+};
+
+function highlightCode(code: string, lang: TargetLang): React.ReactNode {
+    const keywords = new Set(KEYWORDS[lang]);
+    const commentMark = lang === 'python' ? '#' : '//';
+
+    return code.split('\n').map((line, i) => {
+        const trimmed = line.trimStart();
+        // full-line comment
+        if (trimmed.startsWith(commentMark)) {
+            return <div key={i}><span style={{ color: '#94a3b8', fontStyle: 'italic' }}>{line}</span></div>;
+        }
+        // preprocessor include for C/C++
+        if (trimmed.startsWith('#')) {
+            return <div key={i}><span style={{ color: '#f472b6' }}>{line}</span></div>;
+        }
+        // tokenize: word | quoted | other
+        const tokens = line.match(/("(?:[^"\\]|\\.)*"|'[^']*'|[A-Za-z_][\w]*|[^A-Za-z_"']+)/g) || [line];
+        return (
+            <div key={i}>
+                {tokens.map((tok, j) => {
+                    if (tok.startsWith('"') || tok.startsWith("'")) {
+                        return <span key={j} style={{ color: '#fb923c' }}>{tok}</span>;
+                    }
+                    if (keywords.has(tok)) {
+                        return <span key={j} style={{ color: '#a78bfa', fontWeight: 600 }}>{tok}</span>;
+                    }
+                    if (/^\d+(\.\d+)?$/.test(tok)) {
+                        return <span key={j} style={{ color: '#34d399' }}>{tok}</span>;
+                    }
+                    return <span key={j}>{tok}</span>;
+                })}
+            </div>
+        );
+    });
+}
 
 interface LineProps {
     text: string;

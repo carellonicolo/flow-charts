@@ -20,7 +20,7 @@ const resizerLineStyle: React.CSSProperties = {
 
 const tagStyle: React.CSSProperties = {
     color: 'white',
-    fontSize: '10px',
+    fontSize: '9px',
     textTransform: 'uppercase',
     fontWeight: 600,
     letterSpacing: '0.4px',
@@ -29,8 +29,8 @@ const tagStyle: React.CSSProperties = {
 const labelStyle: React.CSSProperties = {
     color: 'white',
     fontWeight: 700,
-    fontSize: '0.95rem',
-    lineHeight: 1.15,
+    fontSize: '0.88rem',
+    lineHeight: 1.1,
     wordBreak: 'break-word',
     whiteSpace: 'pre-wrap',
 };
@@ -47,7 +47,7 @@ export const StartNode = ({ selected }: NodeProps) => {
                 lineStyle={resizerLineStyle}
             />
             <div className="glass-panel" style={{
-                padding: '6px 16px',
+                padding: '5px 14px',
                 background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                 borderRadius: '24px',
                 display: 'flex',
@@ -56,10 +56,10 @@ export const StartNode = ({ selected }: NodeProps) => {
                 width: '100%',
                 height: '100%',
                 minWidth: '110px',
-                minHeight: '36px',
+                minHeight: '28px',
                 justifyContent: 'center',
-                boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)',
-                border: '1px solid rgba(255,255,255,0.2)'
+                boxShadow: '0 2px 6px rgba(0, 0, 0, 0.35)',
+                border: '1.5px solid rgba(255,255,255,0.35)'
             }}>
                 <Play size={16} color="white" />
                 <div style={{ color: 'white', fontWeight: 'bold', fontSize: '0.95rem', textShadow: '0 1px 2px rgba(0,0,0,0.2)' }}>{t('nodes.start')}</div>
@@ -81,7 +81,7 @@ export const EndNode = ({ selected }: NodeProps) => {
                 lineStyle={resizerLineStyle}
             />
             <div className="glass-panel" style={{
-                padding: '6px 16px',
+                padding: '5px 14px',
                 background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
                 borderRadius: '24px',
                 display: 'flex',
@@ -90,10 +90,10 @@ export const EndNode = ({ selected }: NodeProps) => {
                 width: '100%',
                 height: '100%',
                 minWidth: '110px',
-                minHeight: '36px',
+                minHeight: '28px',
                 justifyContent: 'center',
-                boxShadow: '0 4px 15px rgba(239, 68, 68, 0.4)',
-                border: '1px solid rgba(255,255,255,0.2)'
+                boxShadow: '0 2px 6px rgba(0, 0, 0, 0.35)',
+                border: '1.5px solid rgba(255,255,255,0.35)'
             }}>
                 <Handle type="target" position={Position.Top} style={handleStyle} />
                 <Square size={16} color="white" />
@@ -119,22 +119,22 @@ export const DeclareNode = ({ data, selected }: NodeProps) => {
                 lineStyle={resizerLineStyle}
             />
             <div className="glass-panel" style={{
-                padding: '8px 12px',
+                padding: '5px 10px',
                 background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
                 borderRadius: '10px',
                 width: '100%',
                 height: '100%',
                 minWidth: '140px',
-                minHeight: '50px',
+                minHeight: '32px',
                 textAlign: 'center',
-                boxShadow: '0 4px 15px rgba(14, 165, 233, 0.4)',
-                border: '1px solid rgba(255,255,255,0.2)',
+                boxShadow: '0 2px 6px rgba(0, 0, 0, 0.35)',
+                border: '1.5px solid rgba(255,255,255,0.35)',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'center',
             }}>
                 <Handle type="target" position={Position.Top} style={handleStyle} />
-                <div style={{ marginBottom: '2px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', opacity: 0.9 }}>
+                <div style={{ marginBottom: '1px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', opacity: 0.9 }}>
                     <Variable size={11} color="white" />
                     <span style={tagStyle}>{t('nodes.declare')}</span>
                 </div>
@@ -165,22 +165,22 @@ export const ProcessNode = ({ data, selected }: NodeProps) => {
                 lineStyle={resizerLineStyle}
             />
             <div className="glass-panel" style={{
-                padding: '8px 12px',
+                padding: '5px 10px',
                 background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
                 borderRadius: '10px',
                 width: '100%',
                 height: '100%',
                 minWidth: '140px',
-                minHeight: '50px',
+                minHeight: '32px',
                 textAlign: 'center',
-                boxShadow: '0 4px 15px rgba(59, 130, 246, 0.4)',
-                border: '1px solid rgba(255,255,255,0.2)',
+                boxShadow: '0 2px 6px rgba(0, 0, 0, 0.35)',
+                border: '1.5px solid rgba(255,255,255,0.35)',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'center',
             }}>
                 <Handle type="target" position={Position.Top} style={handleStyle} />
-                <div style={{ marginBottom: '2px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', opacity: 0.9 }}>
+                <div style={{ marginBottom: '1px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', opacity: 0.9 }}>
                     <ArrowRight size={11} color="white" />
                     <span style={tagStyle}>{t('nodes.process')}</span>
                 </div>
@@ -276,8 +276,8 @@ export const DecisionNode = ({ data, selected, id }: NodeProps) => {
                         transform: 'translate(-50%, -50%) rotate(45deg)',
                         background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
                         borderRadius: '10px',
-                        boxShadow: '0 4px 15px rgba(245, 158, 11, 0.4)',
-                        border: '1px solid rgba(255,255,255,0.2)',
+                        boxShadow: '0 2px 6px rgba(0, 0, 0, 0.35)',
+                        border: '1.5px solid rgba(255,255,255,0.35)',
                         zIndex: 1
                     }}
                 />
@@ -392,16 +392,16 @@ export const InputNode = ({ data, selected }: NodeProps) => {
                 width: '100%',
                 height: '100%',
                 minWidth: '140px',
-                minHeight: '56px',
+                minHeight: '34px',
             }}>
                 <div style={{
-                    padding: '8px 12px',
+                    padding: '5px 10px',
                     background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
                     borderRadius: '6px',
                     transform: 'skew(-10deg)',
                     textAlign: 'center',
-                    boxShadow: '0 4px 15px rgba(139, 92, 246, 0.4)',
-                    border: '1px solid rgba(255,255,255,0.2)',
+                    boxShadow: '0 2px 6px rgba(0, 0, 0, 0.35)',
+                    border: '1.5px solid rgba(255,255,255,0.35)',
                     overflow: 'hidden',
                     isolation: 'isolate',
                     width: '100%',
@@ -411,7 +411,7 @@ export const InputNode = ({ data, selected }: NodeProps) => {
                     justifyContent: 'center',
                 }}>
                     <div style={{ transform: 'skew(10deg)', background: 'transparent', width: '100%' }}>
-                        <div style={{ marginBottom: '2px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', opacity: 0.9 }}>
+                        <div style={{ marginBottom: '1px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', opacity: 0.9 }}>
                             <Save size={11} color="white" />
                             <span style={tagStyle}>{t('nodes.input')}</span>
                         </div>
@@ -451,16 +451,16 @@ export const OutputNode = ({ data, selected }: NodeProps) => {
                 width: '100%',
                 height: '100%',
                 minWidth: '140px',
-                minHeight: '56px',
+                minHeight: '34px',
             }}>
                 <div style={{
-                    padding: '8px 12px',
+                    padding: '5px 10px',
                     background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
                     borderRadius: '6px',
                     transform: 'skew(-10deg)',
                     textAlign: 'center',
-                    boxShadow: '0 4px 15px rgba(139, 92, 246, 0.4)',
-                    border: '1px solid rgba(255,255,255,0.2)',
+                    boxShadow: '0 2px 6px rgba(0, 0, 0, 0.35)',
+                    border: '1.5px solid rgba(255,255,255,0.35)',
                     overflow: 'hidden',
                     isolation: 'isolate',
                     width: '100%',
@@ -470,7 +470,7 @@ export const OutputNode = ({ data, selected }: NodeProps) => {
                     justifyContent: 'center',
                 }}>
                     <div style={{ transform: 'skew(10deg)', background: 'transparent', width: '100%' }}>
-                        <div style={{ marginBottom: '2px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', opacity: 0.9 }}>
+                        <div style={{ marginBottom: '1px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', opacity: 0.9 }}>
                             <LogOut size={11} color="white" />
                             <span style={tagStyle}>{t('nodes.output')}</span>
                         </div>
