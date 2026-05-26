@@ -50,10 +50,66 @@ function AppContent() {
   // Hidden file input for Cmd+O
   const openInputRef = useRef<HTMLInputElement>(null);
 
+  // In-app clipboard for Cmd+C / Cmd+V / Cmd+X
+  const clipboardRef = useRef<{ nodes: any[]; edges: any[] }>({ nodes: [], edges: [] });
+
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
 
   const { undo, redo, canUndo, canRedo } = useFlowHistory(nodes, edges, setNodes, setEdges);
+
+  const copySelectedNodes = () => {
+    const selected = nodes.filter(n => n.selected);
+    if (selected.length === 0) return;
+    const ids = new Set(selected.map(n => n.id));
+    const innerEdges = edges.filter(e => ids.has(e.source) && ids.has(e.target));
+    clipboardRef.current = {
+      nodes: selected.map(n => JSON.parse(JSON.stringify(n))),
+      edges: innerEdges.map(e => JSON.parse(JSON.stringify(e))),
+    };
+    setLogs(prev => [...prev, `📋 ${selected.length} ${selected.length === 1 ? 'blocco copiato' : 'blocchi copiati'}`]);
+  };
+
+  const cutSelectedNodes = () => {
+    const selected = nodes.filter(n => n.selected);
+    if (selected.length === 0) return;
+    copySelectedNodes();
+    const ids = new Set(selected.map(n => n.id));
+    setNodes(nodes.filter(n => !ids.has(n.id)));
+    setEdges(edges.filter(e => !ids.has(e.source) && !ids.has(e.target)));
+  };
+
+  const pasteNodes = () => {
+    const clip = clipboardRef.current;
+    if (!clip.nodes.length) return;
+    const stamp = Date.now();
+    const idMap = new Map<string, string>();
+    const offset = { x: 40, y: 40 };
+    const newNodes = clip.nodes.map((n: any, i: number) => {
+      const newId = `${n.id}_paste_${stamp}_${i}`;
+      idMap.set(n.id, newId);
+      return {
+        ...n,
+        id: newId,
+        position: { x: (n.position?.x ?? 0) + offset.x, y: (n.position?.y ?? 0) + offset.y },
+        selected: true,
+        data: { ...n.data },
+      };
+    });
+    const newEdges = clip.edges
+      .filter((e: any) => idMap.has(e.source) && idMap.has(e.target))
+      .map((e: any, i: number) => ({
+        ...e,
+        id: `${e.id}_paste_${stamp}_${i}`,
+        source: idMap.get(e.source)!,
+        target: idMap.get(e.target)!,
+        selected: false,
+        data: e.data ? { ...e.data, waypoints: Array.isArray(e.data.waypoints) ? [...e.data.waypoints] : [] } : { waypoints: [] },
+      }));
+    setNodes([...nodes.map(n => ({ ...n, selected: false })), ...newNodes]);
+    setEdges([...edges, ...newEdges]);
+    setLogs(prev => [...prev, `📋 ${newNodes.length} ${newNodes.length === 1 ? 'blocco incollato' : 'blocchi incollati'}`]);
+  };
 
   const duplicateSelectedNodes = () => {
     const selected = nodes.filter(n => n.selected);
@@ -76,6 +132,9 @@ function AppContent() {
     onRunToggle: () => handleRun(),
     onClear: () => handleClear(),
     onDuplicate: duplicateSelectedNodes,
+    onCopy: copySelectedNodes,
+    onPaste: pasteNodes,
+    onCut: cutSelectedNodes,
     onViewFlowchart: () => setViewMode('flowchart'),
     onViewPseudocode: () => setViewMode('pseudocode'),
     onEscape: () => {
@@ -612,6 +671,7 @@ function AppContent() {
             onDownloadPseudoPdf={handleDownloadPseudoPdf}
             onDownloadJSON={handleDownloadJSON}
             onImportJSON={handleImportJSON}
+            onShowShortcuts={() => setShortcutsHelpOpen(true)}
           />
 
           <div className={`console-container ${isConsoleOpen ? 'open' : ''}`}>

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import {
     Play, Square, Trash2, Workflow, FileCode,
-    Undo2, Redo2, Download, ChevronDown, Upload,
+    Undo2, Redo2, Download, ChevronDown, Upload, Keyboard,
 } from 'lucide-react';
 import { useTranslation } from '../i18n/i18nContext';
 
@@ -22,6 +22,7 @@ interface CommandBarProps {
     onDownloadPseudoPdf?: () => void;
     onDownloadJSON?: () => void;
     onImportJSON?: (file: File) => void;
+    onShowShortcuts?: () => void;
 }
 
 export const CommandBar: React.FC<CommandBarProps> = ({
@@ -41,6 +42,7 @@ export const CommandBar: React.FC<CommandBarProps> = ({
     onDownloadPseudoPdf,
     onDownloadJSON,
     onImportJSON,
+    onShowShortcuts,
 }) => {
     const { t, language } = useTranslation();
     const [downloadOpen, setDownloadOpen] = useState(false);
@@ -182,6 +184,17 @@ export const CommandBar: React.FC<CommandBarProps> = ({
                 title={language === 'it' ? 'Svuota canvas' : 'Clear canvas'}
             >
                 <Trash2 size={14} />
+            </button>
+
+            <div className="mini-divider" />
+
+            <button
+                type="button"
+                className="mini-btn"
+                onClick={onShowShortcuts}
+                title={language === 'it' ? 'Scorciatoie da tastiera (⇧?)' : 'Keyboard shortcuts (⇧?)'}
+            >
+                <Keyboard size={14} />
             </button>
         </div>
     );

@@ -6,6 +6,9 @@ export interface ShortcutHandlers {
     onRunToggle?: () => void;
     onClear?: () => void;
     onDuplicate?: () => void;
+    onCopy?: () => void;
+    onPaste?: () => void;
+    onCut?: () => void;
     onViewFlowchart?: () => void;
     onViewPseudocode?: () => void;
     onEscape?: () => void;
@@ -57,6 +60,21 @@ export function useShortcuts(h: ShortcutHandlers) {
             if (mod && key === 'd') {
                 e.preventDefault();
                 h.onDuplicate?.();
+                return;
+            }
+            if (mod && key === 'c') {
+                e.preventDefault();
+                h.onCopy?.();
+                return;
+            }
+            if (mod && key === 'v') {
+                e.preventDefault();
+                h.onPaste?.();
+                return;
+            }
+            if (mod && key === 'x') {
+                e.preventDefault();
+                h.onCut?.();
                 return;
             }
             if (mod && (key === '\\' || (key === 'k' && e.shiftKey))) {

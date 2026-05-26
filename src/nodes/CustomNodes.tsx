@@ -42,7 +42,7 @@ export const StartNode = ({ selected }: NodeProps) => {
             <NodeResizer
                 isVisible={!!selected}
                 minWidth={110}
-                minHeight={36}
+                minHeight={28}
                 handleStyle={resizerHandleStyle}
                 lineStyle={resizerLineStyle}
             />
@@ -76,7 +76,7 @@ export const EndNode = ({ selected }: NodeProps) => {
             <NodeResizer
                 isVisible={!!selected}
                 minWidth={110}
-                minHeight={36}
+                minHeight={28}
                 handleStyle={resizerHandleStyle}
                 lineStyle={resizerLineStyle}
             />
@@ -114,7 +114,7 @@ export const DeclareNode = ({ data, selected }: NodeProps) => {
             <NodeResizer
                 isVisible={!!selected}
                 minWidth={140}
-                minHeight={50}
+                minHeight={32}
                 handleStyle={resizerHandleStyle}
                 lineStyle={resizerLineStyle}
             />
@@ -160,7 +160,7 @@ export const ProcessNode = ({ data, selected }: NodeProps) => {
             <NodeResizer
                 isVisible={!!selected}
                 minWidth={140}
-                minHeight={50}
+                minHeight={32}
                 handleStyle={resizerHandleStyle}
                 lineStyle={resizerLineStyle}
             />
@@ -383,7 +383,7 @@ export const InputNode = ({ data, selected }: NodeProps) => {
             <NodeResizer
                 isVisible={!!selected}
                 minWidth={140}
-                minHeight={56}
+                minHeight={34}
                 handleStyle={resizerHandleStyle}
                 lineStyle={resizerLineStyle}
             />
@@ -442,7 +442,7 @@ export const OutputNode = ({ data, selected }: NodeProps) => {
             <NodeResizer
                 isVisible={!!selected}
                 minWidth={140}
-                minHeight={56}
+                minHeight={34}
                 handleStyle={resizerHandleStyle}
                 lineStyle={resizerLineStyle}
             />
