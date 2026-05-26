@@ -12,6 +12,7 @@ import { PseudocodeView } from './components/PseudocodeView';
 import { Executor } from './engine/Executor';
 import { validateFlowSyntax, formatValidationMessage } from './utils/flowValidation';
 import { buildPseudocodeProgram } from './utils/pseudocode';
+import { useFlowHistory } from './utils/useFlowHistory';
 import './styles/main.css';
 
 function AppContent() {
@@ -42,6 +43,8 @@ function AppContent() {
 
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+
+  const { undo, redo, canUndo, canRedo } = useFlowHistory(nodes, edges, setNodes, setEdges);
 
   const executorRef = useRef<Executor | null>(null);
   const consoleRef = useRef<any>(null);
@@ -237,6 +240,55 @@ function AppContent() {
   const handleDownloadPDF = () => handleExport('pdf');
   const handleDownloadPNG = () => handleExport('png');
   const handleDownloadJPEG = () => handleExport('jpeg');
+
+  const handleDownloadJSON = () => {
+    try {
+      const payload = {
+        version: 1,
+        type: 'flow-charts-project',
+        savedAt: new Date().toISOString(),
+        nodes,
+        edges,
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `flow-chart-${Date.now()}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      setLogs(prev => [...prev, '💾 Progetto JSON salvato']);
+    } catch (error) {
+      console.error(error);
+      setLogs(prev => [...prev, '❌ Errore durante il salvataggio JSON']);
+    }
+  };
+
+  const handleImportJSON = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const text = String(ev.target?.result || '');
+        const parsed = JSON.parse(text);
+        if (!parsed || !Array.isArray(parsed.nodes) || !Array.isArray(parsed.edges)) {
+          throw new Error('JSON non valido: mancano "nodes" o "edges"');
+        }
+        if (isExecuting) handleStop();
+        setNodes(parsed.nodes);
+        setEdges(parsed.edges);
+        setLogs(prev => [...prev, `📂 Progetto caricato: ${parsed.nodes.length} blocchi, ${parsed.edges.length} connessioni`]);
+      } catch (error: any) {
+        console.error(error);
+        setLogs(prev => [...prev, `❌ Errore caricamento JSON: ${error.message || error}`]);
+      }
+    };
+    reader.onerror = () => {
+      setLogs(prev => [...prev, '❌ Impossibile leggere il file selezionato']);
+    };
+    reader.readAsText(file);
+  };
 
   const handleDownloadPseudoTxt = () => {
     try {
@@ -475,6 +527,8 @@ function AppContent() {
         onDownloadJPEG={handleDownloadJPEG}
         onDownloadPseudoTxt={handleDownloadPseudoTxt}
         onDownloadPseudoPdf={handleDownloadPseudoPdf}
+        onDownloadJSON={handleDownloadJSON}
+        onImportJSON={handleImportJSON}
         onClear={handleClear}
         onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         isConsoleOpen={isConsoleOpen}
@@ -483,6 +537,10 @@ function AppContent() {
         onStartExercise={handleStartExercise}
         viewMode={viewMode}
         onChangeViewMode={setViewMode}
+        onUndo={undo}
+        onRedo={redo}
+        canUndo={canUndo}
+        canRedo={canRedo}
       />
 
       <div className="main-content">

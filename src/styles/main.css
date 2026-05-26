@@ -997,6 +997,18 @@ body {
   color: #8b5cf6;
 }
 
+.item-icon.json {
+  background: #d1fae5;
+  color: #059669;
+  font-family: monospace;
+  font-size: 14px;
+}
+
+.item-icon.json-import {
+  background: #fde68a;
+  color: #b45309;
+}
+
 /* Export-friendly mode: temporarily disable glassmorphism and colored glows
    so PNG/JPEG/PDF captures don't end up with ugly bleeding halos around nodes. */
 .reactflow-wrapper.exporting,

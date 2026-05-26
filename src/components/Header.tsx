@@ -1,4 +1,4 @@
-import { Menu, Play, Square, Terminal, Sun, Moon, Github, Globe, ChevronDown, HelpCircle, Library, Trash2, BookOpen, Star, Brain, Trophy, Palette, Download, Workflow, FileCode } from 'lucide-react';
+import { Menu, Play, Square, Terminal, Sun, Moon, Github, Globe, ChevronDown, HelpCircle, Library, Trash2, BookOpen, Star, Brain, Trophy, Palette, Download, Workflow, FileCode, Undo2, Redo2, Upload } from 'lucide-react';
 import { useTranslation, type Language } from '../i18n/i18nContext';
 import { useState, useRef, useEffect } from 'react';
 import { HelpModal } from './HelpModal';
@@ -15,6 +15,8 @@ interface HeaderProps {
   onDownloadJPEG?: () => void;
   onDownloadPseudoTxt?: () => void;
   onDownloadPseudoPdf?: () => void;
+  onDownloadJSON?: () => void;
+  onImportJSON?: (file: File) => void;
   onClear?: () => void;
   onToggleSidebar: () => void;
   isConsoleOpen: boolean;
@@ -25,6 +27,10 @@ interface HeaderProps {
   onColorThemeChange: (theme: string) => void;
   viewMode: 'flowchart' | 'pseudocode';
   onChangeViewMode: (mode: 'flowchart' | 'pseudocode') => void;
+  onUndo?: () => void;
+  onRedo?: () => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
 }
 
 export const Header = ({
@@ -37,6 +43,8 @@ export const Header = ({
   onDownloadJPEG,
   onDownloadPseudoTxt,
   onDownloadPseudoPdf,
+  onDownloadJSON,
+  onImportJSON,
   onClear,
   onToggleSidebar,
   isConsoleOpen,
@@ -47,6 +55,10 @@ export const Header = ({
   onColorThemeChange,
   viewMode,
   onChangeViewMode,
+  onUndo,
+  onRedo,
+  canUndo,
+  canRedo,
 }: HeaderProps) => {
   const { t, language, changeLanguage } = useTranslation();
   const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
@@ -61,6 +73,7 @@ export const Header = ({
   const exerciseDropdownRef = useRef<HTMLDivElement>(null);
   const colorDropdownRef = useRef<HTMLDivElement>(null);
   const downloadDropdownRef = useRef<HTMLDivElement>(null);
+  const importFileInputRef = useRef<HTMLInputElement>(null);
 
   const languages: { code: Language; label: string; flag: string }[] = [
     { code: 'it', label: 'Italiano', flag: '🇮🇹' },
@@ -180,6 +193,29 @@ export const Header = ({
 
             <div className="capsule-divider" />
 
+            <button
+              type="button"
+              className="capsule-btn secondary"
+              onClick={onUndo}
+              disabled={!canUndo}
+              title={`${language === 'it' ? 'Annulla' : 'Undo'} (Ctrl+Z)`}
+              style={{ opacity: canUndo ? 1 : 0.4 }}
+            >
+              <Undo2 size={16} />
+            </button>
+            <button
+              type="button"
+              className="capsule-btn secondary"
+              onClick={onRedo}
+              disabled={!canRedo}
+              title={`${language === 'it' ? 'Ripeti' : 'Redo'} (Ctrl+Shift+Z)`}
+              style={{ opacity: canRedo ? 1 : 0.4 }}
+            >
+              <Redo2 size={16} />
+            </button>
+
+            <div className="capsule-divider" />
+
             <div ref={downloadDropdownRef} className="download-wrapper">
               <button
                 className={`capsule-btn secondary ${isDownloadDropdownOpen ? 'active' : ''}`}
@@ -233,9 +269,36 @@ export const Header = ({
                       <span className="item-desc">{t('pseudocode.exportPdfDesc')}</span>
                     </div>
                   </button>
+                  <div style={{ height: '1px', background: 'var(--glass-border)', margin: '6px 0' }} />
+                  <button className="dropdown-item" onClick={() => { onDownloadJSON?.(); setIsDownloadDropdownOpen(false); }}>
+                    <div className="item-icon json">{'{ }'}</div>
+                    <div className="item-info">
+                      <span className="item-label">{language === 'it' ? 'Salva progetto (JSON)' : 'Save project (JSON)'}</span>
+                      <span className="item-desc">{language === 'it' ? 'Per riprenderlo in seguito' : 'Reload later to keep editing'}</span>
+                    </div>
+                  </button>
+                  <button className="dropdown-item" onClick={() => { importFileInputRef.current?.click(); setIsDownloadDropdownOpen(false); }}>
+                    <div className="item-icon json-import"><Upload size={14} /></div>
+                    <div className="item-info">
+                      <span className="item-label">{language === 'it' ? 'Carica progetto (JSON)' : 'Load project (JSON)'}</span>
+                      <span className="item-desc">{language === 'it' ? 'Importa un flowchart salvato' : 'Import a saved flowchart'}</span>
+                    </div>
+                  </button>
                 </div>
               )}
             </div>
+
+            <input
+              ref={importFileInputRef}
+              type="file"
+              accept="application/json,.json"
+              style={{ display: 'none' }}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) onImportJSON?.(f);
+                e.target.value = '';
+              }}
+            />
 
             <div className="capsule-divider" />
 

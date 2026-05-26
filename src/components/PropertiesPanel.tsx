@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Settings, X, Plus, Trash2 } from 'lucide-react';
 import { type Node } from 'reactflow';
 import { useTranslation } from '../i18n/i18nContext';
@@ -53,7 +53,10 @@ export const PropertiesForm: React.FC<FormProps> = ({ selectedNode, allNodes, on
         [allNodes, selectedNode.id],
     );
 
+    const justInitialized = useRef(true);
+
     useEffect(() => {
+        justInitialized.current = true;
         setLabel(selectedNode.data.label || '');
         setVariableName(selectedNode.data.variableName || '');
         setVariableType((selectedNode.data.variableType as VarType) || 'int');
@@ -66,46 +69,46 @@ export const PropertiesForm: React.FC<FormProps> = ({ selectedNode, allNodes, on
         setParts(Array.isArray(selectedNode.data.parts) ? selectedNode.data.parts : []);
     }, [selectedNode.id]);
 
-    const handleSave = () => {
-        const newData: any = { ...selectedNode.data, label };
-
-        if (selectedNode.type === 'declare') {
+    // Live-sync to the node every time a field changes; skip the very first
+    // render after a node is selected so we don't echo the initial value back.
+    const nodeId = selectedNode.id;
+    const nodeType = selectedNode.type;
+    useEffect(() => {
+        if (justInitialized.current) {
+            justInitialized.current = false;
+            return;
+        }
+        const newData: any = { label };
+        if (nodeType === 'declare') {
             newData.variableName = variableName.trim();
             newData.variableType = variableType;
             newData.initialValue = initialValue.trim();
             newData.label = variableName.trim() || label;
-        } else if (selectedNode.type === 'process') {
+        } else if (nodeType === 'process') {
             newData.expression = expression;
             newData.variableName = variableName.trim();
             newData.label = expression || label;
-        } else if (selectedNode.type === 'decision') {
+        } else if (nodeType === 'decision') {
             newData.condition = condition;
             newData.truePosition = truePosition;
             newData.falsePosition = falsePosition === truePosition
                 ? (truePosition === 'bottom' ? 'right' : 'bottom')
                 : falsePosition;
             newData.label = condition || label;
-        } else if (selectedNode.type === 'input') {
+        } else if (nodeType === 'input') {
             newData.variableName = variableName.trim();
             newData.prompt = prompt;
             newData.label = variableName.trim() ? `→ ${variableName.trim()}` : label;
-        } else if (selectedNode.type === 'output') {
+        } else if (nodeType === 'output') {
             newData.parts = parts;
             newData.expression = undefined;
             newData.label = parts.length > 0
                 ? parts.map(p => p.kind === 'text' ? `"${p.value}"` : p.value).join(' + ')
                 : label;
         }
-
-        onUpdateNode(selectedNode.id, newData);
-        onClose();
-    };
-
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter' && !e.shiftKey && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
-            handleSave();
-        }
-    };
+        onUpdateNode(nodeId, newData);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [label, variableName, variableType, initialValue, expression, condition, truePosition, falsePosition, prompt, parts, nodeId, nodeType]);
 
     const addPart = (kind: 'text' | 'var') => {
         setParts(prev => [...prev, kind === 'text' ? { kind: 'text', value: '' } : { kind: 'var', value: declaredVars[0]?.name || '' }]);
@@ -177,7 +180,7 @@ export const PropertiesForm: React.FC<FormProps> = ({ selectedNode, allNodes, on
                 <>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                         <label style={labelStyle}>{t('properties.variableLabel')}</label>
-                        <input type="text" value={variableName} onChange={(e) => setVariableName(e.target.value)} onKeyDown={handleKeyDown} placeholder={t('properties.variablePlaceholder')} style={inputStyle} />
+                        <input type="text" value={variableName} onChange={(e) => setVariableName(e.target.value)} placeholder={t('properties.variablePlaceholder')} style={inputStyle} />
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                         <label style={labelStyle}>{t('properties.variableTypeLabel')}</label>
@@ -189,7 +192,7 @@ export const PropertiesForm: React.FC<FormProps> = ({ selectedNode, allNodes, on
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                         <label style={labelStyle}>{t('properties.initialValueLabel')}</label>
-                        <input type="text" value={initialValue} onChange={(e) => setInitialValue(e.target.value)} onKeyDown={handleKeyDown} placeholder={t('properties.initialValuePlaceholder')} style={inputStyle} />
+                        <input type="text" value={initialValue} onChange={(e) => setInitialValue(e.target.value)} placeholder={t('properties.initialValuePlaceholder')} style={inputStyle} />
                     </div>
                 </>
             )}
@@ -208,7 +211,7 @@ export const PropertiesForm: React.FC<FormProps> = ({ selectedNode, allNodes, on
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                         <label style={labelStyle}>{t('properties.expressionLabel')}</label>
-                        <input type="text" value={expression} onChange={(e) => setExpression(e.target.value)} onKeyDown={handleKeyDown} placeholder={t('properties.expressionPlaceholder')} style={inputStyle} />
+                        <input type="text" value={expression} onChange={(e) => setExpression(e.target.value)} placeholder={t('properties.expressionPlaceholder')} style={inputStyle} />
                     </div>
                 </>
             )}
@@ -217,7 +220,7 @@ export const PropertiesForm: React.FC<FormProps> = ({ selectedNode, allNodes, on
                 <>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                         <label style={labelStyle}>{t('properties.conditionLabel')}</label>
-                        <input type="text" value={condition} onChange={(e) => setCondition(e.target.value)} onKeyDown={handleKeyDown} placeholder={t('properties.conditionPlaceholder')} style={inputStyle} />
+                        <input type="text" value={condition} onChange={(e) => setCondition(e.target.value)} placeholder={t('properties.conditionPlaceholder')} style={inputStyle} />
                     </div>
                     <div style={{ display: 'flex', gap: '8px' }}>
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -290,7 +293,7 @@ export const PropertiesForm: React.FC<FormProps> = ({ selectedNode, allNodes, on
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                         <label style={labelStyle}>{t('properties.inputPromptLabel')}</label>
-                        <input type="text" value={prompt} onChange={(e) => setPrompt(e.target.value)} onKeyDown={handleKeyDown} placeholder={t('properties.inputPromptPlaceholder')} style={inputStyle} />
+                        <input type="text" value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder={t('properties.inputPromptPlaceholder')} style={inputStyle} />
                     </div>
                 </>
             )}
@@ -360,43 +363,40 @@ export const PropertiesForm: React.FC<FormProps> = ({ selectedNode, allNodes, on
                 </div>
             )}
 
-            <div style={{ display: 'flex', gap: '8px', marginTop: '5px' }}>
-                <button className="btn btn-primary" onClick={handleSave} style={{ flex: 1, padding: '10px' }}>
-                    {t('properties.updateButton')}
+            {onDeleteNode && (
+                <button
+                    type="button"
+                    onClick={() => onDeleteNode(selectedNode.id)}
+                    title={t('properties.deleteButton')}
+                    style={{
+                        marginTop: '5px',
+                        padding: '10px 12px',
+                        background: 'rgba(239, 68, 68, 0.12)',
+                        color: '#ef4444',
+                        border: '1px solid rgba(239, 68, 68, 0.4)',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        fontWeight: 600,
+                        fontSize: '0.85rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
+                        transition: 'all 0.18s',
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#ef4444';
+                        e.currentTarget.style.color = 'white';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'rgba(239, 68, 68, 0.12)';
+                        e.currentTarget.style.color = '#ef4444';
+                    }}
+                >
+                    <Trash2 size={15} />
+                    {t('properties.deleteButton')}
                 </button>
-                {onDeleteNode && (
-                    <button
-                        type="button"
-                        onClick={() => onDeleteNode(selectedNode.id)}
-                        title={t('properties.deleteButton')}
-                        style={{
-                            padding: '10px 12px',
-                            background: 'rgba(239, 68, 68, 0.12)',
-                            color: '#ef4444',
-                            border: '1px solid rgba(239, 68, 68, 0.4)',
-                            borderRadius: '8px',
-                            cursor: 'pointer',
-                            fontWeight: 600,
-                            fontSize: '0.85rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            transition: 'all 0.18s',
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.background = '#ef4444';
-                            e.currentTarget.style.color = 'white';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.background = 'rgba(239, 68, 68, 0.12)';
-                            e.currentTarget.style.color = '#ef4444';
-                        }}
-                    >
-                        <Trash2 size={15} />
-                        {t('properties.deleteButton')}
-                    </button>
-                )}
-            </div>
+            )}
         </div>
     );
 };
