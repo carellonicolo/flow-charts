@@ -18,8 +18,6 @@ interface CommandBarProps {
     onDownloadPDF?: () => void;
     onDownloadPNG?: () => void;
     onDownloadJPEG?: () => void;
-    onDownloadPseudoTxt?: () => void;
-    onDownloadPseudoPdf?: () => void;
     onDownloadJSON?: () => void;
     onImportJSON?: (file: File) => void;
     onShowShortcuts?: () => void;
@@ -38,8 +36,6 @@ export const CommandBar: React.FC<CommandBarProps> = ({
     onDownloadPDF,
     onDownloadPNG,
     onDownloadJPEG,
-    onDownloadPseudoTxt,
-    onDownloadPseudoPdf,
     onDownloadJSON,
     onImportJSON,
     onShowShortcuts,
@@ -129,15 +125,6 @@ export const CommandBar: React.FC<CommandBarProps> = ({
                         <button className="dropdown-item" onClick={() => { onDownloadJPEG?.(); setDownloadOpen(false); }}>
                             <div className="item-icon jpeg">JPEG</div>
                             <div className="item-info"><span className="item-label">Immagine JPEG</span><span className="item-desc">{language === 'it' ? 'File leggero/compatto' : 'Smaller file size'}</span></div>
-                        </button>
-                        <div style={{ height: '1px', background: 'var(--glass-border)', margin: '6px 0' }} />
-                        <button className="dropdown-item" onClick={() => { onDownloadPseudoTxt?.(); setDownloadOpen(false); }}>
-                            <div className="item-icon txt">TXT</div>
-                            <div className="item-info"><span className="item-label">{t('pseudocode.exportTxt')}</span><span className="item-desc">{t('pseudocode.exportTxtDesc')}</span></div>
-                        </button>
-                        <button className="dropdown-item" onClick={() => { onDownloadPseudoPdf?.(); setDownloadOpen(false); }}>
-                            <div className="item-icon pseudo-pdf">PDF</div>
-                            <div className="item-info"><span className="item-label">{t('pseudocode.exportPdf')}</span><span className="item-desc">{t('pseudocode.exportPdfDesc')}</span></div>
                         </button>
                         <div style={{ height: '1px', background: 'var(--glass-border)', margin: '6px 0' }} />
                         <button className="dropdown-item" onClick={() => { onDownloadJSON?.(); setDownloadOpen(false); }}>

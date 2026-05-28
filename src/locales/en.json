@@ -64,13 +64,34 @@
     "collapseTooltip": "Collapse console",
     "inputPlaceholderWaiting": "Enter value...",
     "inputPlaceholderReady": "Ready...",
-    "help": "Console Help"
+    "help": "Console Help",
+    "waitingBadge": "waiting for input",
+    "hideTrace": "Hide execution details",
+    "showTrace": "Show execution details",
+    "copy": "Copy output",
+    "clear": "Clear console",
+    "empty": "The console is empty. Press ▶ to run the flow.",
+    "interrupted": "Execution stopped by the user",
+    "validationPassed": "Validation passed!"
+  },
+  "exec": {
+    "started": "▶ Execution started",
+    "finished": "■ Execution finished",
+    "noStart": "No Start block found.",
+    "declare": "Declare {name} : {type} = {value}",
+    "assign": "{name} = {value}",
+    "emptyExpr": "(empty expression, skipped)",
+    "decision": "Decision: {cond} → {result}",
+    "true": "true",
+    "false": "false",
+    "condError": "Error in condition: {cond}",
+    "inputDefault": "Enter {name}"
   },
   "consoleHelp": {
     "title": "Console - Guide",
     "description": "The console shows the output of your flowchart execution. Here you can see messages from Output blocks, variable values, any errors, and enter data when requested by Input blocks.",
     "usage": "During execution, the console displays messages in real time. When an Input block requests a value, the input field at the bottom will activate. Type the requested value and press Enter or click the send icon. You can resize the console by dragging the top-left corner.",
-    "example": "Example output:\n• Output: Hello world!\n• Input: x = 5\n• Output: The result is 10\n\nError messages will appear in red, inputs in purple, and outputs in blue."
+    "example": "During execution you will see:\n▶ start and ■ end of execution\n? the message from an Input block\n▸ the value you type\nthe Output blocks shown prominently (colored box)\ninternal steps (declarations, actions, decisions) as dimmed details.\n\nUse the icons at the top to hide details (eye), copy or clear the console. Errors appear in red."
   },
   "properties": {
     "title": "Properties",
@@ -123,11 +144,7 @@
     "toggleTitle": "Switch view"
   },
   "pseudocode": {
-    "emptyHint": "Add blocks in the flowchart or insert a line below BEGIN.",
-    "exportTxt": "Pseudocode TXT",
-    "exportTxtDesc": "Plain text file",
-    "exportPdf": "Pseudocode PDF",
-    "exportPdfDesc": "Printable document"
+    "emptyHint": "Add blocks in the flowchart or insert a line below BEGIN."
   },
   "modal": {
     "descriptionTitle": "Description",

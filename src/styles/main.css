@@ -1261,3 +1261,25 @@ body {
   display: flex;
   align-items: center;
 }
+
+/* Line-number gutters for the pseudocode and generated-code views */
+.code-gutter,
+.pseudo-gutter {
+  flex: 0 0 auto;
+  width: 2.25em;
+  margin-right: 1em;
+  text-align: right;
+  color: var(--text-secondary);
+  opacity: 0.4;
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.pseudo-line {
+  counter-increment: pseudoline;
+}
+
+.pseudo-gutter::before {
+  content: counter(pseudoline);
+}

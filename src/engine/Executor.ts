@@ -1,9 +1,10 @@
 import type { Node, Edge } from 'reactflow';
 import { coerceValue, defaultInitialFor, type OutputPart, type VarType } from '../types/flow';
+import type { EmitLog } from '../types/console';
 
-export type LogCallback = (message: string) => void;
 export type InputCallback = (prompt: string) => Promise<string>;
 export type HighlightCallback = (nodeId: string | null) => void;
+export type TFn = (key: string, params?: Record<string, string | number>) => string;
 
 interface VarSlot {
     type: VarType;
@@ -14,38 +15,44 @@ export class Executor {
     private nodes: Node[];
     private edges: Edge[];
     private vars: Record<string, VarSlot> = {};
-    private log: LogCallback;
+    private emit: EmitLog;
     private requestInput: InputCallback;
     private setHighlight: HighlightCallback;
+    private t: TFn;
     private isRunning: boolean = false;
+    private stopped: boolean = false;
 
     constructor(
         nodes: Node[],
         edges: Edge[],
-        log: LogCallback,
+        emit: EmitLog,
         requestInput: InputCallback,
-        setHighlight: HighlightCallback
+        setHighlight: HighlightCallback,
+        t: TFn
     ) {
         this.nodes = nodes;
         this.edges = edges;
-        this.log = log;
+        this.emit = emit;
         this.requestInput = requestInput;
         this.setHighlight = setHighlight;
+        this.t = t;
     }
 
     stop() {
         this.isRunning = false;
+        this.stopped = true;
         this.setHighlight(null);
     }
 
     async execute() {
         this.isRunning = true;
+        this.stopped = false;
         this.vars = {};
-        this.log('Execution started...');
+        this.emit({ kind: 'system', text: this.t('exec.started') });
 
         const startNode = this.nodes.find(n => n.type === 'start');
         if (!startNode) {
-            this.log('Error: No Start node found.');
+            this.emit({ kind: 'error', text: this.t('exec.noStart') });
             return;
         }
 
@@ -60,7 +67,6 @@ export class Executor {
                     case 'start':
                         break;
                     case 'end':
-                        this.log('Execution finished.');
                         this.isRunning = false;
                         break;
                     case 'declare':
@@ -80,7 +86,7 @@ export class Executor {
                         continue;
                 }
             } catch (error: any) {
-                this.log(`Error: ${error.message}`);
+                this.emit({ kind: 'error', text: error.message });
                 this.isRunning = false;
                 break;
             }
@@ -91,6 +97,9 @@ export class Executor {
         }
 
         this.setHighlight(null);
+        if (!this.stopped) {
+            this.emit({ kind: 'system', text: this.t('exec.finished') });
+        }
     }
 
     private executeDeclare(node: Node) {
@@ -105,13 +114,13 @@ export class Executor {
             ? coerceValue(initialRaw, type)
             : defaultInitialFor(type);
         this.vars[name] = { type, value };
-        this.log(`Declare: ${name} : ${type} = ${this.formatValue(value)}`);
+        this.emit({ kind: 'trace', text: this.t('exec.declare', { name, type, value: this.formatValue(value) }) });
     }
 
     private executeProcess(node: Node) {
         const expression: string = node.data.expression || '';
         if (!expression.trim()) {
-            this.log('Process: (espressione vuota, ignorato)');
+            this.emit({ kind: 'trace', text: this.t('exec.emptyExpr') });
             return;
         }
         const explicitVar: string | undefined = node.data.variableName?.trim() || undefined;
@@ -121,15 +130,15 @@ export class Executor {
             this.assertDeclared(varName);
             const value = this.evaluateExpression(valueExpr);
             this.assignValue(varName, value);
-            this.log(`Process: ${varName} = ${this.formatValue(this.vars[varName].value)}`);
+            this.emit({ kind: 'trace', text: this.t('exec.assign', { name: varName, value: this.formatValue(this.vars[varName].value) }) });
         } else if (explicitVar) {
             this.assertDeclared(explicitVar);
             const value = this.evaluateExpression(expression);
             this.assignValue(explicitVar, value);
-            this.log(`Process: ${explicitVar} = ${this.formatValue(this.vars[explicitVar].value)}`);
+            this.emit({ kind: 'trace', text: this.t('exec.assign', { name: explicitVar, value: this.formatValue(this.vars[explicitVar].value) }) });
         } else {
             this.evaluateExpression(expression);
-            this.log(`Process: ${expression}`);
+            this.emit({ kind: 'trace', text: expression });
         }
     }
 
@@ -138,11 +147,10 @@ export class Executor {
         if (!varName) throw new Error('Blocco Input senza variabile assegnata');
         this.assertDeclared(varName);
         const slot = this.vars[varName];
-        const prompt = node.data.prompt || `Inserisci ${varName}`;
+        const prompt = node.data.prompt || this.t('exec.inputDefault', { name: varName });
         const raw = await this.requestInput(prompt);
         const value = coerceValue(raw, slot.type);
         slot.value = value;
-        this.log(`Input: ${varName} = ${this.formatValue(value)}`);
     }
 
     private executeOutput(node: Node) {
@@ -151,9 +159,9 @@ export class Executor {
             const legacy = node.data.expression;
             if (legacy) {
                 const evaluated = this.evaluateExpression(legacy);
-                this.log(`Output: ${this.formatValue(evaluated)}`);
+                this.emit({ kind: 'output', text: this.formatValue(evaluated) });
             } else {
-                this.log('Output: (vuoto)');
+                this.emit({ kind: 'output', text: '' });
             }
             return;
         }
@@ -164,7 +172,7 @@ export class Executor {
                 return this.formatValue(this.vars[p.value].value);
             })
             .join('');
-        this.log(`Output: ${text}`);
+        this.emit({ kind: 'output', text });
     }
 
     private executeDecision(node: Node): Node | undefined {
@@ -172,9 +180,9 @@ export class Executor {
         let result = false;
         try {
             result = !!this.evaluateExpression(condition);
-            this.log(`Decision: ${condition} is ${result}`);
+            this.emit({ kind: 'trace', text: this.t('exec.decision', { cond: condition, result: result ? this.t('exec.true') : this.t('exec.false') }) });
         } catch (e) {
-            this.log(`Error evaluating condition: ${condition}`);
+            this.emit({ kind: 'error', text: this.t('exec.condError', { cond: condition }) });
             throw e;
         }
 

@@ -64,13 +64,34 @@
     "collapseTooltip": "Comprimi console",
     "inputPlaceholderWaiting": "Inserisci un valore...",
     "inputPlaceholderReady": "Pronto...",
-    "help": "Aiuto Console"
+    "help": "Aiuto Console",
+    "waitingBadge": "in attesa di input",
+    "hideTrace": "Nascondi dettagli esecuzione",
+    "showTrace": "Mostra dettagli esecuzione",
+    "copy": "Copia output",
+    "clear": "Pulisci console",
+    "empty": "La console è vuota. Premi ▶ per eseguire il flusso.",
+    "interrupted": "Esecuzione interrotta dall'utente",
+    "validationPassed": "Validazione superata!"
+  },
+  "exec": {
+    "started": "▶ Esecuzione avviata",
+    "finished": "■ Esecuzione terminata",
+    "noStart": "Nessun blocco Inizio trovato.",
+    "declare": "Dichiara {name} : {type} = {value}",
+    "assign": "{name} = {value}",
+    "emptyExpr": "(espressione vuota, ignorata)",
+    "decision": "Decisione: {cond} → {result}",
+    "true": "vero",
+    "false": "falso",
+    "condError": "Errore nella condizione: {cond}",
+    "inputDefault": "Inserisci {name}"
   },
   "consoleHelp": {
     "title": "Console - Guida",
     "description": "La console mostra l'output dell'esecuzione del tuo diagramma di flusso. Qui puoi vedere i messaggi dei blocchi Output, i valori delle variabili, eventuali errori, e inserire dati quando richiesti dai blocchi Input.",
     "usage": "Durante l'esecuzione, la console mostra i messaggi in tempo reale. Quando un blocco Input richiede un valore, il campo di input in basso si attiverà. Digita il valore richiesto e premi Invio o clicca sull'icona di invio. Puoi ridimensionare la console trascinando l'angolo in alto a sinistra.",
-    "example": "Esempio di output:\n• Output: Ciao mondo!\n• Input: x = 5\n• Output: Il risultato è 10\n\nI messaggi di errore appariranno in rosso, gli input in viola, e gli output in blu."
+    "example": "Durante l'esecuzione vedrai:\n▶ avvio e ■ fine dell'esecuzione\n? il messaggio di un blocco Input\n▸ il valore che digiti\nl'output dei blocchi Output in evidenza (riquadro colorato)\ni passaggi interni (Dichiara, azioni, decisioni) come dettagli attenuati.\n\nUsa le icone in alto per nascondere i dettagli (occhio), copiare o pulire la console. Gli errori appaiono in rosso."
   },
   "properties": {
     "title": "Proprietà",
@@ -123,11 +144,7 @@
     "toggleTitle": "Cambia vista"
   },
   "pseudocode": {
-    "emptyHint": "Aggiungi blocchi al flowchart oppure inserisci una riga sotto BEGIN.",
-    "exportTxt": "Pseudocodice TXT",
-    "exportTxtDesc": "File di testo",
-    "exportPdf": "Pseudocodice PDF",
-    "exportPdfDesc": "Documento stampabile"
+    "emptyHint": "Aggiungi blocchi al flowchart oppure inserisci una riga sotto BEGIN."
   },
   "modal": {
     "descriptionTitle": "Descrizione",

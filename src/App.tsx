@@ -12,7 +12,9 @@ import { Toast } from './components/Toast';
 import { PseudocodeView } from './components/PseudocodeView';
 import { Executor } from './engine/Executor';
 import { validateFlowSyntax, formatValidationMessage } from './utils/flowValidation';
-import { buildPseudocodeProgram } from './utils/pseudocode';
+import { buildExport, LANG_LABELS, type TargetLang } from './utils/codegen';
+import type { LogEntry, LogKind } from './types/console';
+import { useTranslation } from './i18n/i18nContext';
 import { useFlowHistory } from './utils/useFlowHistory';
 import { useShortcuts } from './utils/useShortcuts';
 import { ShortcutsHelp } from './components/ShortcutsHelp';
@@ -27,10 +29,20 @@ function AppContent() {
     return localStorage.getItem('color-theme') || 'indigo';
   });
   const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(null);
-  const [logs, setLogs] = useState<string[]>([]);
+  const { t } = useTranslation();
+  const [logs, setLogs] = useState<LogEntry[]>([]);
   const [isWaitingForInput, setIsWaitingForInput] = useState(false);
+  const [currentPrompt, setCurrentPrompt] = useState('');
   const [isExecuting, setIsExecuting] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
+
+  const pushLog = (kind: LogKind, text: string) => {
+    setLogs(prev => [...prev, { kind, text, ts: Date.now() }]);
+  };
+  const resetLogs = (entries: { kind: LogKind; text: string }[]) => {
+    const now = Date.now();
+    setLogs(entries.map(e => ({ ...e, ts: now })));
+  };
 
   // Help Modal states
   const [helpModalOpen, setHelpModalOpen] = useState(false);
@@ -67,7 +79,7 @@ function AppContent() {
       nodes: selected.map(n => JSON.parse(JSON.stringify(n))),
       edges: innerEdges.map(e => JSON.parse(JSON.stringify(e))),
     };
-    setLogs(prev => [...prev, `📋 ${selected.length} ${selected.length === 1 ? 'blocco copiato' : 'blocchi copiati'}`]);
+    pushLog('system', `📋 ${selected.length} ${selected.length === 1 ? 'blocco copiato' : 'blocchi copiati'}`);
   };
 
   const cutSelectedNodes = () => {
@@ -108,7 +120,7 @@ function AppContent() {
       }));
     setNodes([...nodes.map(n => ({ ...n, selected: false })), ...newNodes]);
     setEdges([...edges, ...newEdges]);
-    setLogs(prev => [...prev, `📋 ${newNodes.length} ${newNodes.length === 1 ? 'blocco incollato' : 'blocchi incollati'}`]);
+    pushLog('system', `📋 ${newNodes.length} ${newNodes.length === 1 ? 'blocco incollato' : 'blocchi incollati'}`);
   };
 
   const duplicateSelectedNodes = () => {
@@ -146,7 +158,7 @@ function AppContent() {
   });
 
   const executorRef = useRef<Executor | null>(null);
-  const consoleRef = useRef<any>(null);
+  const inputResolverRef = useRef<((value: string) => void) | null>(null);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -160,11 +172,16 @@ function AppContent() {
   const handleStop = () => {
     if (executorRef.current) {
       executorRef.current.stop();
-      setLogs(prev => [...prev, '⏹️ Esecuzione interrotta dall\'utente']);
+      pushLog('warning', `⏹️ ${t('console.interrupted')}`);
+    }
+    if (inputResolverRef.current) {
+      inputResolverRef.current('');
+      inputResolverRef.current = null;
     }
     setIsExecuting(false);
     setHighlightedNodeId(null);
     setIsWaitingForInput(false);
+    setCurrentPrompt('');
   };
 
   const handleRun = async () => {
@@ -181,7 +198,7 @@ function AppContent() {
       // Mostra errori di validazione
       const errorMessage = formatValidationMessage(validation);
       setValidationError(errorMessage);
-      setLogs([errorMessage]);
+      resetLogs([{ kind: 'error', text: errorMessage }]);
       setIsConsoleOpen(true); // Mostra console con errori
       return;
     }
@@ -189,9 +206,9 @@ function AppContent() {
     // Se ci sono warning, mostrali nella console ma continua
     if (validation.warnings.length > 0) {
       const warningMessage = formatValidationMessage(validation);
-      setLogs([warningMessage, '', 'Starting execution...']);
+      resetLogs([{ kind: 'warning', text: warningMessage }]);
     } else {
-      setLogs(['✅ Validazione superata!', 'Starting execution...']);
+      resetLogs([{ kind: 'system', text: `✅ ${t('console.validationPassed')}` }]);
     }
 
     setIsExecuting(true);
@@ -201,44 +218,45 @@ function AppContent() {
     // Open console on mobile when running
     setIsConsoleOpen(true);
 
-    // Executor signature: nodes, edges, logCallback, requestInput, setHighlight
+    // Executor signature: nodes, edges, emit, requestInput, setHighlight, t
     executorRef.current = new Executor(
       nodes,
       edges,
-      (log) => setLogs(prev => [...prev, log]),
-      async (msg) => {
+      (entry) => setLogs(prev => [...prev, { ...entry, ts: Date.now() }]),
+      (prompt) => {
+        setCurrentPrompt(prompt);
         setIsWaitingForInput(true);
         setIsConsoleOpen(true); // Ensure console is open for input
+        pushLog('prompt', prompt);
         return new Promise<string>((resolve) => {
-          if (consoleRef.current) {
-            consoleRef.current.requestInput(resolve);
-          } else {
-            // Fallback if ref is not working
-            const val = window.prompt(msg);
-            resolve(val || '');
-          }
+          inputResolverRef.current = resolve;
         });
       },
-      (nodeId) => setHighlightedNodeId(nodeId)
+      (nodeId) => setHighlightedNodeId(nodeId),
+      t
     );
 
     try {
       await executorRef.current.execute();
-      setLogs(prev => [...prev, '✅ Execution finished.']);
     } catch (error: any) {
-      setLogs(prev => [...prev, `❌ Error: ${error.message}`]);
+      pushLog('error', error.message);
     } finally {
       setIsExecuting(false);
       setHighlightedNodeId(null);
       setIsWaitingForInput(false);
+      setCurrentPrompt('');
+      inputResolverRef.current = null;
     }
   };
 
   const handleInput = (value: string) => {
-    if (consoleRef.current) {
-      consoleRef.current.handleInputChange(value);
-    }
+    pushLog('input', value);
     setIsWaitingForInput(false);
+    setCurrentPrompt('');
+    if (inputResolverRef.current) {
+      inputResolverRef.current(value);
+      inputResolverRef.current = null;
+    }
   };
 
   const onPaneClick = () => {
@@ -265,14 +283,14 @@ function AppContent() {
     if (isExecuting) handleStop();
     setNodes([]);
     setEdges([]);
-    setLogs(['🧹 Area di lavoro ripulita']);
+    resetLogs([{ kind: 'system', text: '🧹 Area di lavoro ripulita' }]);
   };
 
   const handleExport = async (format: 'pdf' | 'png' | 'jpeg') => {
     const flowElement = document.querySelector('.reactflow-wrapper') as HTMLElement;
     if (!flowElement) return;
 
-    setLogs(prev => [...prev, `⚙️ Generazione ${format.toUpperCase()} in corso...`]);
+    pushLog('system', `⚙️ Generazione ${format.toUpperCase()} in corso...`);
 
     // Switch the canvas to a clean "exporting" mode so colored glows,
     // backdrop-filter blur and overlays don't bleed into the captured image.
@@ -327,10 +345,10 @@ function AppContent() {
         document.body.removeChild(link);
       }
 
-      setLogs(prev => [...prev, `📄 ${format.toUpperCase()} scaricato con successo`]);
+      pushLog('system', `📄 ${format.toUpperCase()} scaricato con successo`);
     } catch (error) {
       console.error(`Errore durante il download del ${format.toUpperCase()}:`, error);
-      setLogs(prev => [...prev, `❌ Errore durante il download del ${format.toUpperCase()}`]);
+      pushLog('error', `❌ Errore durante il download del ${format.toUpperCase()}`);
     } finally {
       flowElement.classList.remove('exporting');
     }
@@ -358,10 +376,10 @@ function AppContent() {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      setLogs(prev => [...prev, '💾 Progetto JSON salvato']);
+      pushLog('system', '💾 Progetto JSON salvato');
     } catch (error) {
       console.error(error);
-      setLogs(prev => [...prev, '❌ Errore durante il salvataggio JSON']);
+      pushLog('error', '❌ Errore durante il salvataggio JSON');
     }
   };
 
@@ -377,74 +395,73 @@ function AppContent() {
         if (isExecuting) handleStop();
         setNodes(parsed.nodes);
         setEdges(parsed.edges);
-        setLogs(prev => [...prev, `📂 Progetto caricato: ${parsed.nodes.length} blocchi, ${parsed.edges.length} connessioni`]);
+        pushLog('system', `📂 Progetto caricato: ${parsed.nodes.length} blocchi, ${parsed.edges.length} connessioni`);
       } catch (error: any) {
         console.error(error);
-        setLogs(prev => [...prev, `❌ Errore caricamento JSON: ${error.message || error}`]);
+        pushLog('error', `❌ Errore caricamento JSON: ${error.message || error}`);
       }
     };
     reader.onerror = () => {
-      setLogs(prev => [...prev, '❌ Impossibile leggere il file selezionato']);
+      pushLog('error', '❌ Impossibile leggere il file selezionato');
     };
     reader.readAsText(file);
   };
 
-  const handleDownloadPseudoTxt = () => {
+  const handlePseudoDownload = (langs: TargetLang[], format: 'txt' | 'pdf') => {
+    const base = langs.length === 0
+      ? 'pseudocodice'
+      : langs.length === 1
+        ? `pseudocodice-${langs[0]}`
+        : 'pseudocodice-e-codice';
+    const label = langs.length === 0
+      ? 'Pseudocodice'
+      : langs.length === 1
+        ? `Pseudocodice + ${LANG_LABELS[langs[0]]}`
+        : 'Pseudocodice + tutti i linguaggi';
     try {
-      const text = buildPseudocodeProgram(nodes, edges);
-      const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'pseudocode.txt';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      setLogs(prev => [...prev, '📄 Pseudocodice TXT scaricato']);
-    } catch (error) {
-      console.error(error);
-      setLogs(prev => [...prev, '❌ Errore durante l\'export TXT']);
-    }
-  };
-
-  const handleDownloadPseudoPdf = () => {
-    try {
-      const text = buildPseudocodeProgram(nodes, edges);
-      const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
-      const margin = 40;
-      const lineHeight = 14;
-      const fontSize = 11;
-      pdf.setFont('courier', 'normal');
-      pdf.setFontSize(fontSize);
-
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const usableWidth = pageWidth - margin * 2;
-
-      let y = margin;
-      pdf.setFontSize(14);
-      pdf.text('Pseudocode', margin, y);
-      y += 24;
-      pdf.setFontSize(fontSize);
-
-      const lines = text.split('\n');
-      for (const line of lines) {
-        const wrapped = pdf.splitTextToSize(line || ' ', usableWidth);
-        for (const w of wrapped) {
-          if (y + lineHeight > pageHeight - margin) {
-            pdf.addPage();
-            y = margin;
+      const text = buildExport(nodes, edges, langs);
+      if (format === 'txt') {
+        const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${base}.txt`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      } else {
+        const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+        const margin = 40;
+        const lineHeight = 14;
+        const fontSize = 11;
+        pdf.setFont('courier', 'normal');
+        pdf.setFontSize(fontSize);
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const usableWidth = pageWidth - margin * 2;
+        let y = margin;
+        pdf.setFontSize(14);
+        pdf.text(label, margin, y);
+        y += 24;
+        pdf.setFontSize(fontSize);
+        for (const line of text.split('\n')) {
+          const wrapped = pdf.splitTextToSize(line || ' ', usableWidth);
+          for (const w of wrapped) {
+            if (y + lineHeight > pageHeight - margin) {
+              pdf.addPage();
+              y = margin;
+            }
+            pdf.text(w, margin, y);
+            y += lineHeight;
           }
-          pdf.text(w, margin, y);
-          y += lineHeight;
         }
+        pdf.save(`${base}.pdf`);
       }
-      pdf.save('pseudocode.pdf');
-      setLogs(prev => [...prev, '📄 Pseudocodice PDF scaricato']);
+      pushLog('system', `📄 ${label} (${format.toUpperCase()}) scaricato`);
     } catch (error) {
       console.error(error);
-      setLogs(prev => [...prev, '❌ Errore durante l\'export PDF pseudocodice']);
+      pushLog('error', `❌ Errore durante l'export ${format.toUpperCase()}`);
     }
   };
 
@@ -651,6 +668,7 @@ function AppContent() {
               setNodes={setNodes}
               setEdges={setEdges}
               theme={theme}
+              onDownload={handlePseudoDownload}
             />
           )}
 
@@ -667,8 +685,6 @@ function AppContent() {
             onDownloadPDF={handleDownloadPDF}
             onDownloadPNG={handleDownloadPNG}
             onDownloadJPEG={handleDownloadJPEG}
-            onDownloadPseudoTxt={handleDownloadPseudoTxt}
-            onDownloadPseudoPdf={handleDownloadPseudoPdf}
             onDownloadJSON={handleDownloadJSON}
             onImportJSON={handleImportJSON}
             onShowShortcuts={() => setShortcutsHelpOpen(true)}
@@ -676,10 +692,11 @@ function AppContent() {
 
           <div className={`console-container ${isConsoleOpen ? 'open' : ''}`}>
             <Console
-              ref={consoleRef}
               logs={logs}
               onInput={handleInput}
               isWaitingForInput={isWaitingForInput}
+              currentPrompt={currentPrompt}
+              onClear={() => setLogs([])}
             />
           </div>
         </div>

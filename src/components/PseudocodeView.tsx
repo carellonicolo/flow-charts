@@ -1,11 +1,11 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { type Node, type Edge } from 'reactflow';
-import { Trash2, Pencil, Plus, X, Copy, Check } from 'lucide-react';
+import { Trash2, Pencil, Plus, X, Copy, Check, Download, ChevronDown } from 'lucide-react';
 import { useTranslation } from '../i18n/i18nContext';
 import { structureFlow, type PseudoLine } from '../utils/pseudocode';
 import { defaultDataForType } from '../types/flow';
 import { PropertiesPanelInline } from './PropertiesPanel';
-import { generateCode, LANG_LABELS, type TargetLang } from '../utils/codegen';
+import { generateCode, LANG_LABELS, TARGET_LANGS, type TargetLang } from '../utils/codegen';
 
 interface PseudocodeViewProps {
     nodes: Node[];
@@ -13,12 +13,13 @@ interface PseudocodeViewProps {
     setNodes: (updater: any) => void;
     setEdges: (updater: any) => void;
     theme: 'light' | 'dark';
+    onDownload?: (langs: TargetLang[], format: 'txt' | 'pdf') => void;
 }
 
 let pseudoId = 0;
 const newId = () => `pseudo_${Date.now()}_${pseudoId++}`;
 
-export const PseudocodeView: React.FC<PseudocodeViewProps> = ({ nodes, edges, setNodes, setEdges }) => {
+export const PseudocodeView: React.FC<PseudocodeViewProps> = ({ nodes, edges, setNodes, setEdges, onDownload }) => {
     const { t, language } = useTranslation();
     const [editingId, setEditingId] = useState<string | null>(null);
     const [insertingAfter, setInsertingAfter] = useState<string | null>(null);
@@ -117,11 +118,28 @@ export const PseudocodeView: React.FC<PseudocodeViewProps> = ({ nodes, edges, se
         }}>
             <div style={{
                 maxWidth: '900px',
+                margin: '0 auto 16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '12px',
+                flexWrap: 'wrap',
+            }}>
+                <span style={{ fontFamily: 'system-ui, sans-serif', fontWeight: 700, fontSize: '1.05rem', color: 'var(--text-color)' }}>
+                    {t('viewMode.pseudocode')}
+                </span>
+                {onDownload && (
+                    <DownloadBar currentLang={currentLang} onDownload={onDownload} language={language} />
+                )}
+            </div>
+            <div style={{
+                maxWidth: '900px',
                 margin: '0 auto',
                 background: 'var(--glass-bg)',
                 border: '1px solid var(--glass-border)',
                 borderRadius: '12px',
                 padding: '20px 24px',
+                counterReset: 'pseudoline',
             }}>
                 <Line
                     text="PROGRAM"
@@ -182,6 +200,111 @@ export const PseudocodeView: React.FC<PseudocodeViewProps> = ({ nodes, edges, se
     );
 };
 
+interface DownloadBarProps {
+    currentLang: TargetLang;
+    onDownload: (langs: TargetLang[], format: 'txt' | 'pdf') => void;
+    language: 'it' | 'en';
+}
+
+const DownloadBar: React.FC<DownloadBarProps> = ({ currentLang, onDownload, language }) => {
+    const [open, setOpen] = useState(false);
+    const ref = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!open) return;
+        const onDoc = (e: MouseEvent) => {
+            if (ref.current && !ref.current.contains(e.target as HTMLElement)) setOpen(false);
+        };
+        document.addEventListener('mousedown', onDoc);
+        return () => document.removeEventListener('mousedown', onDoc);
+    }, [open]);
+
+    const rows: { label: string; langs: TargetLang[] }[] = [
+        { label: language === 'it' ? 'Solo pseudocodice' : 'Pseudocode only', langs: [] },
+        { label: `${language === 'it' ? 'Pseudocodice' : 'Pseudocode'} + ${LANG_LABELS[currentLang]}`, langs: [currentLang] },
+        { label: language === 'it' ? 'Pseudocodice + tutti i linguaggi' : 'Pseudocode + all languages', langs: [...TARGET_LANGS] },
+    ];
+
+    const pick = (langs: TargetLang[], format: 'txt' | 'pdf') => {
+        onDownload(langs, format);
+        setOpen(false);
+    };
+
+    return (
+        <div ref={ref} style={{ position: 'relative', fontFamily: 'system-ui, sans-serif' }}>
+            <button
+                onClick={() => setOpen(o => !o)}
+                style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '8px 14px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--glass-border)',
+                    background: open ? 'var(--primary-color)' : 'var(--glass-bg)',
+                    color: open ? 'white' : 'var(--text-color)',
+                    fontWeight: 600,
+                    fontSize: '0.85rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s',
+                }}
+            >
+                <Download size={15} />
+                {language === 'it' ? 'Scarica' : 'Download'}
+                <ChevronDown size={13} style={{ opacity: 0.7 }} />
+            </button>
+            {open && (
+                <div style={{
+                    position: 'absolute',
+                    right: 0,
+                    top: 'calc(100% + 8px)',
+                    minWidth: '300px',
+                    background: 'var(--theme-card-bg)',
+                    border: '1px solid var(--glass-border)',
+                    borderRadius: '12px',
+                    boxShadow: '0 12px 32px rgba(0,0,0,0.35)',
+                    padding: '6px',
+                    zIndex: 50,
+                }}>
+                    {rows.map((r, i) => (
+                        <div key={i} style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: '12px',
+                            padding: '8px 10px',
+                            borderRadius: '8px',
+                        }}>
+                            <span style={{ fontSize: '0.85rem', color: 'var(--text-color)' }}>{r.label}</span>
+                            <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+                                <FormatBtn onClick={() => pick(r.langs, 'txt')}>TXT</FormatBtn>
+                                <FormatBtn onClick={() => pick(r.langs, 'pdf')}>PDF</FormatBtn>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
+
+const FormatBtn: React.FC<{ onClick: () => void; children: React.ReactNode }> = ({ onClick, children }) => (
+    <button
+        onClick={onClick}
+        style={{
+            padding: '5px 12px',
+            borderRadius: '6px',
+            border: '1px solid var(--primary-color)',
+            background: 'transparent',
+            color: 'var(--primary-color)',
+            fontWeight: 700,
+            fontSize: '0.75rem',
+            cursor: 'pointer',
+            fontFamily: 'system-ui, sans-serif',
+        }}
+    >{children}</button>
+);
+
 interface CodeTranslationPanelProps {
     lang: TargetLang;
     onChangeLang: (l: TargetLang) => void;
@@ -191,7 +314,7 @@ interface CodeTranslationPanelProps {
 
 const CodeTranslationPanel: React.FC<CodeTranslationPanelProps> = ({ lang, onChangeLang, code, language }) => {
     const [copied, setCopied] = useState(false);
-    const langs: TargetLang[] = ['python', 'java', 'c', 'cpp'];
+    const langs = TARGET_LANGS;
 
     const handleCopy = async () => {
         try {
@@ -214,6 +337,8 @@ const CodeTranslationPanel: React.FC<CodeTranslationPanelProps> = ({ lang, onCha
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
+                rowGap: '8px',
+                flexWrap: 'wrap',
                 padding: '10px 16px',
                 borderBottom: '1px solid var(--glass-border)',
                 background: 'rgba(0,0,0,0.15)',
@@ -283,7 +408,7 @@ const CodeTranslationPanel: React.FC<CodeTranslationPanelProps> = ({ lang, onCha
                 whiteSpace: 'pre',
                 overflowX: 'auto',
             }}>
-                <code>{highlightCode(code, lang)}</code>
+                <code style={{ fontFamily: 'inherit' }}>{highlightCode(code, lang)}</code>
             </pre>
         </div>
     );
@@ -295,41 +420,46 @@ const KEYWORDS: Record<TargetLang, string[]> = {
     java: ['public', 'private', 'class', 'static', 'void', 'main', 'String', 'int', 'double', 'float', 'boolean', 'true', 'false', 'if', 'else', 'while', 'do', 'for', 'return', 'new', 'import', 'package'],
     c: ['int', 'double', 'float', 'char', 'bool', 'void', 'if', 'else', 'while', 'do', 'for', 'return', 'true', 'false', '#include'],
     cpp: ['int', 'double', 'float', 'char', 'bool', 'void', 'if', 'else', 'while', 'do', 'for', 'return', 'true', 'false', 'std', '#include', 'using', 'namespace', 'class', 'public', 'private'],
+    javascript: ['let', 'const', 'var', 'function', 'if', 'else', 'while', 'do', 'for', 'return', 'true', 'false', 'null', 'undefined', 'break', 'continue', 'console', 'prompt', 'parseInt', 'parseFloat', 'String', 'includes'],
+    csharp: ['using', 'System', 'class', 'static', 'void', 'Main', 'Console', 'string', 'int', 'double', 'float', 'bool', 'var', 'if', 'else', 'while', 'do', 'for', 'return', 'true', 'false', 'new'],
+    php: ['echo', 'if', 'else', 'elseif', 'while', 'do', 'for', 'foreach', 'function', 'return', 'true', 'false', 'null', 'and', 'or', 'not', 'trim', 'fgets', 'in_array', 'strtolower', 'STDIN', 'PHP_EOL'],
 };
+
+function highlightLine(line: string, keywords: Set<string>, commentMark: string): React.ReactNode {
+    const trimmed = line.trimStart();
+    // full-line comment
+    if (trimmed.startsWith(commentMark)) {
+        return <span style={{ color: '#94a3b8', fontStyle: 'italic' }}>{line}</span>;
+    }
+    // preprocessor include for C/C++, or PHP open/close tags
+    if (trimmed.startsWith('#') || trimmed.startsWith('<?') || trimmed === '?>') {
+        return <span style={{ color: '#f472b6' }}>{line}</span>;
+    }
+    // tokenize: word | quoted | other
+    const tokens = line.match(/("(?:[^"\\]|\\.)*"|'[^']*'|[A-Za-z_][\w]*|[^A-Za-z_"']+)/g) || [line];
+    return tokens.map((tok, j) => {
+        if (tok.startsWith('"') || tok.startsWith("'")) {
+            return <span key={j} style={{ color: '#fb923c' }}>{tok}</span>;
+        }
+        if (keywords.has(tok)) {
+            return <span key={j} style={{ color: '#a78bfa', fontWeight: 600 }}>{tok}</span>;
+        }
+        if (/^\d+(\.\d+)?$/.test(tok)) {
+            return <span key={j} style={{ color: '#34d399' }}>{tok}</span>;
+        }
+        return <span key={j}>{tok}</span>;
+    });
+}
 
 function highlightCode(code: string, lang: TargetLang): React.ReactNode {
     const keywords = new Set(KEYWORDS[lang]);
     const commentMark = lang === 'python' ? '#' : '//';
-
-    return code.split('\n').map((line, i) => {
-        const trimmed = line.trimStart();
-        // full-line comment
-        if (trimmed.startsWith(commentMark)) {
-            return <div key={i}><span style={{ color: '#94a3b8', fontStyle: 'italic' }}>{line}</span></div>;
-        }
-        // preprocessor include for C/C++
-        if (trimmed.startsWith('#')) {
-            return <div key={i}><span style={{ color: '#f472b6' }}>{line}</span></div>;
-        }
-        // tokenize: word | quoted | other
-        const tokens = line.match(/("(?:[^"\\]|\\.)*"|'[^']*'|[A-Za-z_][\w]*|[^A-Za-z_"']+)/g) || [line];
-        return (
-            <div key={i}>
-                {tokens.map((tok, j) => {
-                    if (tok.startsWith('"') || tok.startsWith("'")) {
-                        return <span key={j} style={{ color: '#fb923c' }}>{tok}</span>;
-                    }
-                    if (keywords.has(tok)) {
-                        return <span key={j} style={{ color: '#a78bfa', fontWeight: 600 }}>{tok}</span>;
-                    }
-                    if (/^\d+(\.\d+)?$/.test(tok)) {
-                        return <span key={j} style={{ color: '#34d399' }}>{tok}</span>;
-                    }
-                    return <span key={j}>{tok}</span>;
-                })}
-            </div>
-        );
-    });
+    return code.split('\n').map((line, i) => (
+        <div key={i} style={{ display: 'flex' }}>
+            <span className="code-gutter">{i + 1}</span>
+            <span style={{ flex: 1, whiteSpace: 'pre' }}>{highlightLine(line, keywords, commentMark)}</span>
+        </div>
+    ));
 }
 
 interface LineProps {
@@ -356,11 +486,11 @@ const Line: React.FC<LineProps> = ({ text, indent, decoration = 'normal', onEdit
 
     return (
         <div
+            className="pseudo-line"
             onMouseEnter={() => setHover(true)}
             onMouseLeave={() => setHover(false)}
             style={{
                 padding: '4px 10px',
-                paddingLeft: `${10 + indent * 24}px`,
                 borderRadius: '6px',
                 display: 'flex',
                 alignItems: 'center',
@@ -372,7 +502,8 @@ const Line: React.FC<LineProps> = ({ text, indent, decoration = 'normal', onEdit
             }}
             onClick={editable ? onEdit : undefined}
         >
-            <span style={{ color, fontWeight, flex: 1, whiteSpace: 'pre-wrap' }}>{text}</span>
+            <span className="pseudo-gutter" aria-hidden="true" />
+            <span style={{ color, fontWeight, flex: 1, whiteSpace: 'pre-wrap', paddingLeft: `${indent * 24}px` }}>{text}</span>
             {hover && editable && (
                 <>
                     <button

@@ -1,8 +1,11 @@
 import { type Node, type Edge } from 'reactflow';
 import { type OutputPart, type VarType } from '../types/flow';
-import { structureFlow, type PseudoLine } from './pseudocode';
+import { structureFlow, buildPseudocodeProgram, type PseudoLine } from './pseudocode';
 
-export type TargetLang = 'python' | 'java' | 'c' | 'cpp';
+export type TargetLang = 'python' | 'java' | 'c' | 'cpp' | 'javascript' | 'csharp' | 'php';
+
+// Display order used by the language switcher and the combined export.
+export const TARGET_LANGS: TargetLang[] = ['python', 'java', 'c', 'cpp', 'javascript', 'csharp', 'php'];
 
 interface CodegenCtx {
     nodes: Node[];
@@ -14,7 +17,7 @@ interface CodegenCtx {
 // ----- helpers -------------------------------------------------------------
 
 function typeMap(t: VarType, lang: TargetLang): string {
-    if (lang === 'python') return ''; // Python is untyped
+    if (lang === 'python' || lang === 'javascript' || lang === 'php') return ''; // dynamically typed
     if (lang === 'java') {
         if (t === 'int') return 'int';
         if (t === 'float') return 'double';
@@ -33,6 +36,12 @@ function typeMap(t: VarType, lang: TargetLang): string {
         if (t === 'string') return 'std::string';
         if (t === 'bool') return 'bool';
     }
+    if (lang === 'csharp') {
+        if (t === 'int') return 'int';
+        if (t === 'float') return 'double';
+        if (t === 'string') return 'string';
+        if (t === 'bool') return 'bool';
+    }
     return 'int';
 }
 
@@ -49,9 +58,26 @@ function jcDefault(t: VarType, lang: TargetLang): string {
     switch (t) {
         case 'int': return '0';
         case 'float': return '0.0';
-        case 'string': return lang === 'java' ? '""' : lang === 'cpp' ? '""' : '{0}';
+        case 'string': return lang === 'c' ? '{0}' : '""';
         case 'bool': return lang === 'python' ? 'False' : 'false';
     }
+}
+
+// PHP requires every variable reference to be prefixed with `$`. We tokenize so
+// string literals are left untouched and boolean/logical keywords are skipped.
+function phpVars(src: string): string {
+    return src.replace(/"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|[A-Za-z_]\w*/g, (m) => {
+        if (m[0] === '"' || m[0] === "'") return m;
+        const low = m.toLowerCase();
+        if (['true', 'false', 'null', 'and', 'or', 'not', 'vero', 'falso'].includes(low)) return m;
+        return '$' + m;
+    });
+}
+
+// Left-hand side of an assignment / declared name, adjusted per language.
+function vname(name: string, lang: TargetLang): string {
+    const n = name.trim();
+    return lang === 'php' ? '$' + n : n;
 }
 
 /**
@@ -68,6 +94,10 @@ function expr(src: string, lang: TargetLang): string {
         out = out.replace(/\b!(?!=)/g, ' not ');
         out = out.replace(/\btrue\b/gi, 'True');
         out = out.replace(/\bfalse\b/gi, 'False');
+    } else if (lang === 'php') {
+        out = out.replace(/\bvero\b/gi, 'true');
+        out = out.replace(/\bfalso\b/gi, 'false');
+        out = phpVars(out);
     } else {
         out = out.replace(/\bvero\b/gi, 'true');
         out = out.replace(/\bfalso\b/gi, 'false');
@@ -83,11 +113,11 @@ function emitSimple(node: Node, ctx: CodegenCtx, lang: TargetLang): string {
         const explicit = node.data.variableName?.trim();
         const e: string = node.data.expression || '';
         if (explicit) {
-            return `${i}${explicit} = ${expr(e, lang)}${stmtTerm(lang)}`;
+            return `${i}${vname(explicit, lang)} = ${expr(e, lang)}${stmtTerm(lang)}`;
         }
         if (e.includes('=')) {
             const [lhs, rhs] = e.split('=').map((s: string) => s.trim());
-            return `${i}${lhs} = ${expr(rhs, lang)}${stmtTerm(lang)}`;
+            return `${i}${vname(lhs, lang)} = ${expr(rhs, lang)}${stmtTerm(lang)}`;
         }
         return `${i}${expr(e, lang)}${stmtTerm(lang)}`;
     }
@@ -152,6 +182,30 @@ function readStatement(v: string, t: VarType, prompt: string, lang: TargetLang, 
             lines.push(`${indent}std::cout << "${promptShow}: ";`);
             lines.push(`${indent}std::cin >> ${v};`);
             return lines.join('\n');
+        case 'javascript': {
+            const ask = `prompt("${promptShow}: ")`;
+            if (t === 'int') lines.push(`${indent}${v} = parseInt(${ask}, 10);`);
+            else if (t === 'float') lines.push(`${indent}${v} = parseFloat(${ask});`);
+            else if (t === 'bool') lines.push(`${indent}${v} = ["true", "1", "sì", "si"].includes(${ask}.trim().toLowerCase());`);
+            else lines.push(`${indent}${v} = ${ask};`);
+            return lines.join('\n');
+        }
+        case 'csharp':
+            lines.push(`${indent}Console.Write("${promptShow}: ");`);
+            if (t === 'int') lines.push(`${indent}${v} = int.Parse(Console.ReadLine());`);
+            else if (t === 'float') lines.push(`${indent}${v} = double.Parse(Console.ReadLine());`);
+            else if (t === 'bool') lines.push(`${indent}${v} = bool.Parse(Console.ReadLine());`);
+            else lines.push(`${indent}${v} = Console.ReadLine();`);
+            return lines.join('\n');
+        case 'php': {
+            const pv = '$' + v;
+            lines.push(`${indent}echo "${promptShow}: ";`);
+            if (t === 'int') lines.push(`${indent}${pv} = (int) trim(fgets(STDIN));`);
+            else if (t === 'float') lines.push(`${indent}${pv} = (float) trim(fgets(STDIN));`);
+            else if (t === 'bool') lines.push(`${indent}${pv} = in_array(strtolower(trim(fgets(STDIN))), ["true", "1", "sì", "si"], true);`);
+            else lines.push(`${indent}${pv} = trim(fgets(STDIN));`);
+            return lines.join('\n');
+        }
     }
 }
 
@@ -189,6 +243,28 @@ function writeFromTokens(tokens: Tok[], lang: TargetLang, indent: string): strin
     if (lang === 'cpp') {
         const stream = tokens.map(t => t.kind === 'text' ? JSON.stringify(t.value) : t.value).join(' << ');
         return `${indent}std::cout << ${stream} << std::endl;`;
+    }
+    if (lang === 'javascript') {
+        const args = tokens.map(t => t.kind === 'text'
+            ? JSON.stringify(t.value)
+            : (tokens.length > 1 ? `String(${t.value})` : t.value));
+        return `${indent}console.log(${args.join(' + ')});`;
+    }
+    if (lang === 'csharp') {
+        const hasVar = tokens.some(t => t.kind !== 'text');
+        if (!hasVar) {
+            const s = tokens.map(t => t.value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')).join('');
+            return `${indent}Console.WriteLine("${s}");`;
+        }
+        const inner = tokens.map(t => t.kind === 'text'
+            ? t.value.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\{/g, '{{').replace(/\}/g, '}}')
+            : `{${t.value}}`).join('');
+        return `${indent}Console.WriteLine($"${inner}");`;
+    }
+    if (lang === 'php') {
+        const single = (s: string) => `'${s.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
+        const parts = tokens.map(t => t.kind === 'text' ? single(t.value) : phpVars(t.value));
+        return `${indent}echo ${parts.join(' . ')} . PHP_EOL;`;
     }
     // C
     const fmt = tokens.map(t => {
@@ -278,6 +354,16 @@ function emitDeclarations(declares: Node[], lang: TargetLang, indent: string): s
             const t = typeMap(type, lang);
             const val = initial ? expr(initial, lang) : jcDefault(type, lang);
             lines.push(`${indent}${t} ${name} = ${val};`);
+        } else if (lang === 'csharp') {
+            const t = typeMap(type, lang);
+            const val = initial ? expr(initial, lang) : jcDefault(type, lang);
+            lines.push(`${indent}${t} ${name} = ${val};`);
+        } else if (lang === 'javascript') {
+            const val = initial ? expr(initial, lang) : jcDefault(type, lang);
+            lines.push(`${indent}let ${name} = ${val};`);
+        } else if (lang === 'php') {
+            const val = initial ? expr(initial, lang) : jcDefault(type, lang);
+            lines.push(`${indent}$${name} = ${val};`);
         } else if (lang === 'c') {
             const t = typeMap(type, lang);
             if (type === 'string') {
@@ -347,6 +433,39 @@ export function generateCode(nodes: Node[], edges: Edge[], lang: TargetLang): st
         return lines.join('\n');
     }
 
+    if (lang === 'javascript') {
+        const indent = '';
+        const decls = emitDeclarations(declares, lang, indent);
+        const body = emitBlock(ast, { ...ctx, indent }, lang);
+        const parts = [
+            decls.length > 0 ? decls.join('\n') : '',
+            body,
+        ].filter(Boolean);
+        return parts.join('\n\n');
+    }
+
+    if (lang === 'csharp') {
+        const indent = '        ';
+        const decls = emitDeclarations(declares, lang, indent);
+        const body = emitBlock(ast, { ...ctx, indent }, lang);
+        const lines: string[] = ['using System;', '', 'class Program {', '    static void Main() {'];
+        if (decls.length > 0) lines.push(decls.join('\n'));
+        if (body) lines.push(body);
+        lines.push('    }');
+        lines.push('}');
+        return lines.join('\n');
+    }
+
+    if (lang === 'php') {
+        const indent = '';
+        const decls = emitDeclarations(declares, lang, indent);
+        const body = emitBlock(ast, { ...ctx, indent }, lang);
+        const lines: string[] = ['<?php', ''];
+        if (decls.length > 0) lines.push(decls.join('\n'));
+        if (body) lines.push(body);
+        return lines.join('\n');
+    }
+
     // cpp
     const indent = '    ';
     const decls = emitDeclarations(declares, lang, indent);
@@ -367,4 +486,23 @@ export const LANG_LABELS: Record<TargetLang, string> = {
     java: 'Java',
     c: 'C',
     cpp: 'C++',
+    javascript: 'JavaScript',
+    csharp: 'C#',
+    php: 'PHP',
 };
+
+// Export document: the pseudocode, optionally followed by a section per
+// language. With no languages it returns the plain pseudocode (no banners);
+// with one or more it adds a banner before each section.
+export function buildExport(nodes: Node[], edges: Edge[], langs: TargetLang[]): string {
+    const pseudo = buildPseudocodeProgram(nodes, edges).trimEnd();
+    if (langs.length === 0) return pseudo + '\n';
+
+    const bar = '='.repeat(54);
+    const section = (title: string, body: string) => `${bar}\n  ${title}\n${bar}\n\n${body.trimEnd()}`;
+    const blocks: string[] = [section('PSEUDOCODICE', pseudo)];
+    for (const lang of langs) {
+        blocks.push(section(LANG_LABELS[lang], generateCode(nodes, edges, lang)));
+    }
+    return blocks.join('\n\n\n') + '\n';
+}

@@ -1,53 +1,70 @@
-import React, { useState, useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { Terminal, Send, ChevronDown, ChevronUp, HelpCircle } from 'lucide-react';
+import { Terminal, Send, ChevronDown, ChevronUp, HelpCircle, Trash2, Copy, Check, Eye, EyeOff, ChevronRight } from 'lucide-react';
 import { useTranslation } from '../i18n/i18nContext';
 import { HelpModal } from './HelpModal';
+import type { LogEntry, LogKind } from '../types/console';
 
 interface ConsoleProps {
-    logs: string[];
+    logs: LogEntry[];
     onInput?: (value: string) => void;
     isWaitingForInput?: boolean;
+    currentPrompt?: string;
+    onClear?: () => void;
 }
 
-export interface ConsoleRef {
-    handleInputChange: (value: string) => void;
-    requestInput: (callback: (value: string) => void) => void;
-}
+const KIND_COLOR: Record<LogKind, string> = {
+    system: 'var(--text-secondary)',
+    trace: 'var(--text-secondary)',
+    output: 'var(--text-color)',
+    prompt: '#a78bfa',
+    input: '#8b5cf6',
+    warning: '#f59e0b',
+    error: '#ef4444',
+};
 
-export const Console = forwardRef<ConsoleRef, ConsoleProps>(({ logs, onInput, isWaitingForInput }, ref) => {
+export const Console: React.FC<ConsoleProps> = ({ logs, onInput, isWaitingForInput, currentPrompt, onClear }) => {
     const { t } = useTranslation();
     const [inputValue, setInputValue] = useState('');
     const [consoleHeight, setConsoleHeight] = useState(300);
     const [consoleWidth, setConsoleWidth] = useState(400);
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
+    const [showTrace, setShowTrace] = useState(true);
+    const [copied, setCopied] = useState(false);
     const endRef = useRef<HTMLDivElement>(null);
-    const inputCallbackRef = useRef<((value: string) => void) | null>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
     const isResizingCorner = useRef(false);
 
-    useImperativeHandle(ref, () => ({
-        handleInputChange: (value: string) => {
-            if (inputCallbackRef.current) {
-                inputCallbackRef.current(value);
-                inputCallbackRef.current = null;
-            }
-        },
-        requestInput: (callback: (value: string) => void) => {
-            inputCallbackRef.current = callback;
-        }
-    }));
+    const traceCount = useMemo(() => logs.filter(l => l.kind === 'trace').length, [logs]);
+    const visibleLogs = useMemo(
+        () => showTrace ? logs : logs.filter(l => l.kind !== 'trace'),
+        [logs, showTrace],
+    );
 
     useEffect(() => {
         endRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [logs]);
+    }, [visibleLogs]);
+
+    // Focus the field as soon as the program asks for input.
+    useEffect(() => {
+        if (isWaitingForInput) inputRef.current?.focus();
+    }, [isWaitingForInput]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (onInput && inputValue.trim()) {
+        if (isWaitingForInput && onInput) {
             onInput(inputValue);
             setInputValue('');
         }
+    };
+
+    const handleCopy = async () => {
+        try {
+            await navigator.clipboard.writeText(logs.map(l => l.text).join('\n'));
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1500);
+        } catch { /* ignore */ }
     };
 
     const handleResizeCornerMouseDown = (e: React.MouseEvent) => {
@@ -62,15 +79,10 @@ export const Console = forwardRef<ConsoleRef, ConsoleProps>(({ logs, onInput, is
 
         const handleMouseMove = (moveEvent: MouseEvent) => {
             if (!isResizingCorner.current) return;
-
-            const deltaX = startX - moveEvent.clientX; // Invertito perché tiriamo verso sinistra
-            const deltaY = startY - moveEvent.clientY; // Invertito perché tiriamo verso l'alto
-
-            const newWidth = Math.max(300, Math.min(startWidth + deltaX, 800));
-            const newHeight = Math.max(150, Math.min(startHeight + deltaY, 700));
-
-            setConsoleWidth(newWidth);
-            setConsoleHeight(newHeight);
+            const deltaX = startX - moveEvent.clientX;
+            const deltaY = startY - moveEvent.clientY;
+            setConsoleWidth(Math.max(300, Math.min(startWidth + deltaX, 800)));
+            setConsoleHeight(Math.max(150, Math.min(startHeight + deltaY, 700)));
         };
 
         const handleMouseUp = () => {
@@ -92,7 +104,6 @@ export const Console = forwardRef<ConsoleRef, ConsoleProps>(({ logs, onInput, is
             bottom: '20px',
             right: '20px'
         }}>
-            {/* Resize Handle Angolo (top-left corner) - solo quando NON collassata */}
             {!isCollapsed && (
                 <div
                     onMouseDown={handleResizeCornerMouseDown}
@@ -113,7 +124,7 @@ export const Console = forwardRef<ConsoleRef, ConsoleProps>(({ logs, onInput, is
                 />
             )}
 
-            {/* Header/Banner */}
+            {/* Header */}
             <div style={{
                 padding: '10px',
                 paddingTop: '12px',
@@ -121,140 +132,139 @@ export const Console = forwardRef<ConsoleRef, ConsoleProps>(({ logs, onInput, is
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
+                gap: '6px',
                 background: 'rgba(0, 0, 0, 0.2)',
                 borderTopLeftRadius: '16px',
                 borderTopRightRadius: '16px',
                 borderBottomLeftRadius: isCollapsed ? '16px' : '0',
                 borderBottomRightRadius: isCollapsed ? '16px' : '0'
             }}>
-                {/* Titolo a sinistra */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
                     <Terminal size={16} />
-                    <span style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>{t('console.title')}</span>
+                    <span style={{ fontWeight: 'bold', fontSize: '0.9rem', whiteSpace: 'nowrap' }}>{t('console.title')}</span>
+                    {isWaitingForInput && (
+                        <span style={{
+                            fontSize: '0.7rem',
+                            fontWeight: 700,
+                            color: '#a78bfa',
+                            background: 'rgba(167, 139, 250, 0.15)',
+                            padding: '2px 8px',
+                            borderRadius: '100px',
+                            whiteSpace: 'nowrap',
+                        }}>{t('console.waitingBadge')}</span>
+                    )}
                 </div>
 
-                {/* Pulsante collapse a destra */}
-                <button
-                    onClick={() => setIsCollapsed(!isCollapsed)}
-                    style={{
-                        background: 'transparent',
-                        border: 'none',
-                        color: 'var(--text-secondary)',
-                        cursor: 'pointer',
-                        padding: '4px',
-                        borderRadius: '4px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        transition: 'all 0.2s'
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'rgba(99, 102, 241, 0.2)';
-                        e.currentTarget.style.color = 'var(--primary-color)';
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'transparent';
-                        e.currentTarget.style.color = 'var(--text-secondary)';
-                    }}
-                    title={isCollapsed ? t('console.expandTooltip') : t('console.collapseTooltip')}
-                >
-                    {isCollapsed ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                    {!isCollapsed && (
+                        <>
+                            <HeaderBtn
+                                onClick={() => setShowTrace(s => !s)}
+                                active={!showTrace}
+                                title={showTrace ? t('console.hideTrace') : t('console.showTrace')}
+                                disabled={traceCount === 0}
+                            >{showTrace ? <Eye size={15} /> : <EyeOff size={15} />}</HeaderBtn>
+                            <HeaderBtn
+                                onClick={handleCopy}
+                                title={t('console.copy')}
+                                disabled={logs.length === 0}
+                            >{copied ? <Check size={15} color="#10b981" /> : <Copy size={15} />}</HeaderBtn>
+                            <HeaderBtn
+                                onClick={() => onClear?.()}
+                                title={t('console.clear')}
+                                disabled={logs.length === 0}
+                            ><Trash2 size={15} /></HeaderBtn>
+                        </>
+                    )}
+                    <HeaderBtn
+                        onClick={() => setIsCollapsed(!isCollapsed)}
+                        title={isCollapsed ? t('console.expandTooltip') : t('console.collapseTooltip')}
+                    >{isCollapsed ? <ChevronUp size={16} /> : <ChevronDown size={16} />}</HeaderBtn>
+                </div>
             </div>
 
             {!isCollapsed && (
                 <div style={{
                     flex: 1,
-                    padding: '10px',
+                    padding: '8px 10px',
                     overflowY: 'auto',
                     overflowX: 'hidden',
-                    fontFamily: 'monospace',
-                    fontSize: '0.9rem',
+                    fontFamily: 'Menlo, Monaco, "Fira Code", monospace',
+                    fontSize: '0.85rem',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '8px',
-                    minHeight: 0 // Importante per permettere lo scroll corretto
+                    gap: '2px',
+                    minHeight: 0
                 }}>
-                {logs.map((log, index) => {
-                    // Colore in base al tipo di messaggio
-                    let color = 'var(--text-secondary)';
-                    if (log.includes('❌') || log.startsWith('Error')) color = '#ef4444';
-                    else if (log.includes('⚠️')) color = '#f59e0b';
-                    else if (log.includes('✅')) color = '#10b981';
-                    else if (log.startsWith('Input')) color = '#8b5cf6';
-                    else if (log.startsWith('Output')) color = '#6366f1';
-
-                    return (
-                        <div
-                            key={index}
-                            style={{
-                                color,
-                                whiteSpace: 'pre-wrap', // Preserva le newline
-                                lineHeight: '1.4',
-                                padding: '4px 0',
-                                borderBottom: index < logs.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none'
-                            }}
-                        >
-                            {log}
+                    {visibleLogs.length === 0 ? (
+                        <div style={{ padding: '16px 6px', fontStyle: 'italic', color: 'var(--text-secondary)', opacity: 0.7, fontFamily: 'system-ui, sans-serif' }}>
+                            {t('console.empty')}
                         </div>
-                    );
-                })}
-                <div ref={endRef} />
+                    ) : (
+                        visibleLogs.map((log, index) => <LogRow key={index} entry={log} />)
+                    )}
+                    <div ref={endRef} />
                 </div>
             )}
 
             {!isCollapsed && (
                 <form onSubmit={handleSubmit} style={{
-                padding: '10px',
-                borderTop: '1px solid var(--glass-border)',
-                display: 'flex',
-                gap: '8px',
-                alignItems: 'center'
-            }}>
-                <button
-                    type="button"
-                    onClick={() => setIsHelpModalOpen(true)}
-                    className="btn btn-icon"
-                    style={{
-                        padding: '5px',
-                        minWidth: '32px',
-                        height: '32px',
-                        background: 'transparent',
-                        border: '1px solid var(--glass-border)'
-                    }}
-                    title={t('console.help')}
-                >
-                    <HelpCircle size={16} />
-                </button>
-                <input
-                    type="text"
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    placeholder={isWaitingForInput ? t('console.inputPlaceholderWaiting') : t('console.inputPlaceholderReady')}
-                    disabled={!isWaitingForInput}
-                    style={{
+                    padding: '10px',
+                    borderTop: '1px solid var(--glass-border)',
+                    display: 'flex',
+                    gap: '8px',
+                    alignItems: 'center'
+                }}>
+                    <button
+                        type="button"
+                        onClick={() => setIsHelpModalOpen(true)}
+                        className="btn btn-icon"
+                        style={{ padding: '5px', minWidth: '32px', height: '32px', background: 'transparent', border: '1px solid var(--glass-border)' }}
+                        title={t('console.help')}
+                    >
+                        <HelpCircle size={16} />
+                    </button>
+                    <div style={{
                         flexGrow: 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
                         background: 'rgba(0, 0, 0, 0.3)',
-                        border: '1px solid var(--glass-border)',
+                        border: `1px solid ${isWaitingForInput ? '#8b5cf6' : 'var(--glass-border)'}`,
                         borderRadius: '4px',
-                        padding: '5px 10px',
-                        color: 'white',
-                        outline: 'none'
-                    }}
-                />
-                <button
-                    type="submit"
-                    disabled={!isWaitingForInput}
-                    className="btn btn-primary"
-                    style={{ padding: '5px 10px', opacity: isWaitingForInput ? 1 : 0.5 }}
-                >
-                    <Send size={14} />
-                </button>
+                        padding: '0 8px',
+                        transition: 'border-color 0.15s',
+                    }}>
+                        <ChevronRight size={15} color={isWaitingForInput ? '#a78bfa' : 'var(--text-secondary)'} style={{ flexShrink: 0 }} />
+                        <input
+                            ref={inputRef}
+                            type="text"
+                            value={inputValue}
+                            onChange={(e) => setInputValue(e.target.value)}
+                            placeholder={isWaitingForInput ? (currentPrompt || t('console.inputPlaceholderWaiting')) : t('console.inputPlaceholderReady')}
+                            disabled={!isWaitingForInput}
+                            style={{
+                                flexGrow: 1,
+                                background: 'transparent',
+                                border: 'none',
+                                padding: '6px 0',
+                                color: 'white',
+                                outline: 'none',
+                                minWidth: 0,
+                            }}
+                        />
+                    </div>
+                    <button
+                        type="submit"
+                        disabled={!isWaitingForInput}
+                        className="btn btn-primary"
+                        style={{ padding: '5px 10px', opacity: isWaitingForInput ? 1 : 0.5 }}
+                    >
+                        <Send size={14} />
+                    </button>
                 </form>
             )}
-
         </div>
-        {/* Help Modal rendered via Portal outside console */}
         {createPortal(
             <HelpModal
                 isOpen={isHelpModalOpen}
@@ -270,6 +280,75 @@ export const Console = forwardRef<ConsoleRef, ConsoleProps>(({ logs, onInput, is
         )}
         </>
     );
-});
+};
+
+const HeaderBtn: React.FC<{ onClick: () => void; title: string; active?: boolean; disabled?: boolean; children: React.ReactNode }> = ({ onClick, title, active, disabled, children }) => (
+    <button
+        type="button"
+        onClick={onClick}
+        disabled={disabled}
+        title={title}
+        style={{
+            background: active ? 'rgba(99, 102, 241, 0.2)' : 'transparent',
+            border: 'none',
+            color: active ? 'var(--primary-color)' : 'var(--text-secondary)',
+            cursor: disabled ? 'default' : 'pointer',
+            opacity: disabled ? 0.35 : 1,
+            padding: '5px',
+            borderRadius: '6px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'all 0.15s',
+        }}
+    >{children}</button>
+);
+
+const LogRow: React.FC<{ entry: LogEntry }> = ({ entry }) => {
+    const color = KIND_COLOR[entry.kind];
+
+    if (entry.kind === 'output') {
+        return (
+            <div style={{
+                color,
+                whiteSpace: 'pre-wrap',
+                lineHeight: 1.5,
+                padding: '3px 8px',
+                margin: '1px 0',
+                fontWeight: 600,
+                borderLeft: '3px solid var(--primary-color)',
+                background: 'rgba(99, 102, 241, 0.08)',
+                borderRadius: '0 4px 4px 0',
+            }}>{entry.text || ' '}</div>
+        );
+    }
+
+    if (entry.kind === 'prompt' || entry.kind === 'input') {
+        const marker = entry.kind === 'prompt' ? '?' : '▸';
+        return (
+            <div style={{ color, whiteSpace: 'pre-wrap', lineHeight: 1.5, padding: '2px 0', display: 'flex', gap: '8px' }}>
+                <span style={{ flexShrink: 0, fontWeight: 700, opacity: 0.8 }}>{marker}</span>
+                <span style={{ fontWeight: entry.kind === 'input' ? 600 : 500 }}>{entry.text}</span>
+            </div>
+        );
+    }
+
+    // system / trace / warning / error
+    const dimmed = entry.kind === 'trace';
+    return (
+        <div style={{
+            color,
+            whiteSpace: 'pre-wrap',
+            lineHeight: 1.5,
+            padding: '2px 0',
+            opacity: dimmed ? 0.65 : 1,
+            display: 'flex',
+            gap: '8px',
+        }}>
+            {dimmed && <span style={{ flexShrink: 0, opacity: 0.6 }}>{'›'}</span>}
+            <span>{entry.text}</span>
+        </div>
+    );
+};
 
 Console.displayName = 'Console';
