@@ -162,8 +162,22 @@ function AppContent() {
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.classList.toggle('dark', theme === 'dark');
     localStorage.setItem('theme', theme);
   }, [theme]);
+
+  // Il toggle tema ora vive nella <carello-shell>, che scrive data-theme su
+  // <html>. Osserviamo l'attributo per mantenere allineato lo stato React
+  // (usato da FlowEditor, export, ecc.) quando il tema cambia dalla shell.
+  useEffect(() => {
+    const root = document.documentElement;
+    const observer = new MutationObserver(() => {
+      const next = root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+      setTheme(prev => (prev === next ? prev : next));
+    });
+    observer.observe(root, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     localStorage.setItem('color-theme', colorTheme);
@@ -265,10 +279,6 @@ function AppContent() {
       setIsSidebarOpen(false);
       setIsConsoleOpen(false);
     }
-  };
-
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
 
   const handleOpenHelp = (title: string, content: HelpContent | string) => {
@@ -631,17 +641,27 @@ function AppContent() {
 
   return (
     <div className="app-container" data-theme={theme} data-color-theme={colorTheme}>
-      <Header
-        theme={theme}
-        onToggleTheme={toggleTheme}
-        colorTheme={colorTheme}
-        onColorThemeChange={setColorTheme}
-        onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
-        isConsoleOpen={isConsoleOpen}
-        onToggleConsole={() => setIsConsoleOpen(!isConsoleOpen)}
-        onLoadExample={loadExample}
-        onStartExercise={handleStartExercise}
-      />
+      {/* Top bar unificata Carello: brand, breadcrumb, launcher app, toggle
+          tema e menu account. I controlli specifici di Flow Chart sono iniettati
+          nello slot "app-actions" dal componente <Header>. */}
+      <carello-shell
+        app-name="Flow Chart"
+        app-icon="Workflow"
+        accent="#6366f1"
+        user="NC"
+        data-hub-url="https://nicolocarello.it"
+        data-auth-url="https://auth.nicolocarello.it"
+      >
+        <Header
+          colorTheme={colorTheme}
+          onColorThemeChange={setColorTheme}
+          onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+          isConsoleOpen={isConsoleOpen}
+          onToggleConsole={() => setIsConsoleOpen(!isConsoleOpen)}
+          onLoadExample={loadExample}
+          onStartExercise={handleStartExercise}
+        />
+      </carello-shell>
 
       <div className="main-content">
         <div className={`sidebar-wrapper ${isSidebarOpen ? 'open' : ''}`}>
@@ -697,6 +717,7 @@ function AppContent() {
               isWaitingForInput={isWaitingForInput}
               currentPrompt={currentPrompt}
               onClear={() => setLogs([])}
+              onClose={() => setIsConsoleOpen(false)}
             />
           </div>
         </div>

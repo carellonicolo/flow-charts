@@ -1,13 +1,12 @@
-import { Menu, Terminal, Sun, Moon, Github, Globe, ChevronDown, HelpCircle, Library, BookOpen, Star, Brain, Trophy, Palette } from 'lucide-react';
+import { Menu, Terminal, Github, Globe, ChevronDown, HelpCircle, Library, BookOpen, Star, Brain, Trophy, Palette, SlidersHorizontal } from 'lucide-react';
 import { useTranslation, type Language } from '../i18n/i18nContext';
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { HelpModal } from './HelpModal';
 import { exercises, type Exercise } from '../data/exercises';
 import { ExerciseViewModal } from './ExerciseViewModal';
 
 interface HeaderProps {
-  theme: 'light' | 'dark';
-  onToggleTheme: () => void;
   onToggleSidebar: () => void;
   isConsoleOpen: boolean;
   onToggleConsole: () => void;
@@ -18,8 +17,6 @@ interface HeaderProps {
 }
 
 export const Header = ({
-  theme,
-  onToggleTheme,
   onToggleSidebar,
   isConsoleOpen,
   onToggleConsole,
@@ -35,10 +32,13 @@ export const Header = ({
   const [isColorDropdownOpen, setIsColorDropdownOpen] = useState(false);
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
+  // Su mobile tutti i controlli dell'header vengono raccolti in un unico menu.
+  const [isToolsMenuOpen, setIsToolsMenuOpen] = useState(false);
   const languageDropdownRef = useRef<HTMLDivElement>(null);
   const exampleDropdownRef = useRef<HTMLDivElement>(null);
   const exerciseDropdownRef = useRef<HTMLDivElement>(null);
   const colorDropdownRef = useRef<HTMLDivElement>(null);
+  const toolsMenuRef = useRef<HTMLDivElement>(null);
 
   const languages: { code: Language; label: string; flag: string }[] = [
     { code: 'it', label: 'Italiano', flag: '🇮🇹' },
@@ -66,6 +66,9 @@ export const Header = ({
       if (colorDropdownRef.current && !colorDropdownRef.current.contains(target)) {
         setIsColorDropdownOpen(false);
       }
+      if (toolsMenuRef.current && !toolsMenuRef.current.contains(target)) {
+        setIsToolsMenuOpen(false);
+      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
@@ -75,49 +78,13 @@ export const Header = ({
   }, []);
 
   return (
-    <header className="glass-panel header-container">
-      {/* Left Section: Logo + Title + Subtitle */}
-      <div className="header-left">
-        <img
-          src="/logo.png"
-          alt="Logo"
-          className="header-logo"
-        />
-        <div className="header-title-section">
-          <h1 style={{
-            margin: 0,
-            fontSize: '1.25rem',
-            lineHeight: 1.2,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px'
-          }}>
-            <span style={{
-              background: 'linear-gradient(to right, #6366f1, #a855f7)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text'
-            }}>Flow Chart</span>
-            <span className="beta-badge" style={{
-              fontSize: '0.5rem',
-              padding: '4px 10px',
-              borderRadius: '6px',
-              background: '#ef4444',
-              color: '#ffffff',
-              fontWeight: 'bold',
-              letterSpacing: '1px',
-              boxShadow: '0 2px 8px rgba(239, 68, 68, 0.5)',
-              lineHeight: '1'
-            }}>
-              BETA
-            </span>
-          </h1>
-          <span className="header-subtitle">Powered by prof. Carello</span>
-        </div>
-      </div>
-
-      {/* Center Section: Controls */}
-      <div className="header-controls">
+    <>
+      {/* Controlli specifici di Flow Chart, iniettati nello slot "app-actions"
+          della <carello-shell>. La shell fornisce già brand/breadcrumb, toggle
+          tema chiaro-scuro, launcher app e menu account: qui restano solo i
+          controlli che la shell non ha. I dropdown vivono nel light DOM e
+          mantengono gli stili globali dell'app. */}
+      <div slot="app-actions" className="header-app-actions">
         {/* Mobile Menu Toggle */}
         <button
           className="btn btn-icon mobile-only"
@@ -136,19 +103,25 @@ export const Header = ({
         >
           <Terminal size={20} />
         </button>
-      </div>
 
-      {/* Right Section: Theme Toggle + Language Toggle + Footer Links */}
-      <div className="header-right">
-        {/* Theme Toggle */}
-        <button
-          onClick={onToggleTheme}
-          className="btn btn-icon"
-          title={t('header.toggleTheme')}
-        >
-          {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
-        </button>
+        {/* Contenitore dei controlli dell'app. Su desktop sono inline; su
+            mobile collassano dietro un unico pulsante (header-tools-toggle)
+            e appaiono come pannello a discesa. */}
+        <div className="header-tools-wrap" ref={toolsMenuRef}>
+          <button
+            className={`btn btn-icon mobile-only header-tools-toggle ${isToolsMenuOpen ? 'active' : ''}`}
+            onClick={() => setIsToolsMenuOpen(o => !o)}
+            title={language === 'it' ? 'Strumenti' : 'Tools'}
+            style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+          >
+            <SlidersHorizontal size={20} color={isToolsMenuOpen ? 'var(--primary-color)' : 'currentColor'} />
+            <ChevronDown size={14} style={{
+              transition: 'transform 0.2s',
+              transform: isToolsMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)'
+            }} />
+          </button>
 
+          <div className={`header-tools ${isToolsMenuOpen ? 'open' : ''}`}>
         {/* Color Theme Selector */}
         <div ref={colorDropdownRef} style={{ position: 'relative' }}>
           <button
@@ -486,8 +459,15 @@ export const Header = ({
         >
           <Github size={20} />
         </a>
+          </div>
+        </div>
       </div>
 
+      {/* Modali resi via portal su document.body: non sono azioni della barra,
+          quindi non devono finire nello slot della shell (che li nasconderebbe,
+          non avendo uno slot di default). */}
+      {createPortal(
+      <>
       {/* Help Modal */}
       <HelpModal
         isOpen={isHelpModalOpen}
@@ -702,6 +682,9 @@ export const Header = ({
           setSelectedExercise(null);
         }}
       />
-    </header>
+      </>,
+      document.body
+      )}
+    </>
   );
 };

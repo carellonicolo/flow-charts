@@ -6,6 +6,24 @@
   <link rel="icon" type="image/png" href="/logo.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Flow Chart</title>
+
+  <!-- Carello shell (top bar unificata + launcher). Rimuovi questo script per rollback. -->
+  <script src="/carello-shell.js" defer></script>
+
+  <!-- Bootstrap tema: imposta data-theme PRIMA del render React così la shell
+       e l'app partono già sincronizzate (default 'dark' come App.tsx). -->
+  <script>
+    (function () {
+      try {
+        var stored = localStorage.getItem('theme');
+        var theme = stored || 'dark';
+        document.documentElement.setAttribute('data-theme', theme);
+        if (theme === 'dark') document.documentElement.classList.add('dark');
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
 </head>
 
 <body>
