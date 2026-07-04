@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { Terminal, Send, ChevronDown, ChevronUp, HelpCircle, Trash2, Copy, Check, Eye, EyeOff, ChevronRight } from 'lucide-react';
+import { Terminal, Send, ChevronDown, ChevronUp, HelpCircle, Trash2, Copy, Check, Eye, EyeOff, ChevronRight, X } from 'lucide-react';
 import { useTranslation } from '../i18n/i18nContext';
 import { HelpModal } from './HelpModal';
 import type { LogEntry, LogKind } from '../types/console';
@@ -11,6 +11,8 @@ interface ConsoleProps {
     isWaitingForInput?: boolean;
     currentPrompt?: string;
     onClear?: () => void;
+    /** Chiude del tutto la console (usato dal bottom-sheet mobile). */
+    onClose?: () => void;
 }
 
 const KIND_COLOR: Record<LogKind, string> = {
@@ -23,7 +25,7 @@ const KIND_COLOR: Record<LogKind, string> = {
     error: '#ef4444',
 };
 
-export const Console: React.FC<ConsoleProps> = ({ logs, onInput, isWaitingForInput, currentPrompt, onClear }) => {
+export const Console: React.FC<ConsoleProps> = ({ logs, onInput, isWaitingForInput, currentPrompt, onClear, onClose }) => {
     const { t } = useTranslation();
     const [inputValue, setInputValue] = useState('');
     const [consoleHeight, setConsoleHeight] = useState(300);
@@ -176,10 +178,22 @@ export const Console: React.FC<ConsoleProps> = ({ logs, onInput, isWaitingForInp
                             ><Trash2 size={15} /></HeaderBtn>
                         </>
                     )}
-                    <HeaderBtn
-                        onClick={() => setIsCollapsed(!isCollapsed)}
-                        title={isCollapsed ? t('console.expandTooltip') : t('console.collapseTooltip')}
-                    >{isCollapsed ? <ChevronUp size={16} /> : <ChevronDown size={16} />}</HeaderBtn>
+                    {/* Desktop: collapse/espandi (riduce l'altezza). Nascosto su
+                        mobile, dove il collapse non ha senso nel bottom-sheet. */}
+                    <span className="desktop-only" style={{ display: 'flex' }}>
+                        <HeaderBtn
+                            onClick={() => setIsCollapsed(!isCollapsed)}
+                            title={isCollapsed ? t('console.expandTooltip') : t('console.collapseTooltip')}
+                        >{isCollapsed ? <ChevronUp size={16} /> : <ChevronDown size={16} />}</HeaderBtn>
+                    </span>
+                    {/* Mobile: chiude del tutto il bottom-sheet della console. */}
+                    {onClose && (
+                        <span className="mobile-only">
+                            <HeaderBtn onClick={onClose} title={t('console.close')}>
+                                <X size={18} />
+                            </HeaderBtn>
+                        </span>
+                    )}
                 </div>
             </div>
 

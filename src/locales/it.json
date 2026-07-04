@@ -62,6 +62,7 @@
     "title": "Console Output",
     "expandTooltip": "Espandi console",
     "collapseTooltip": "Comprimi console",
+    "close": "Chiudi console",
     "inputPlaceholderWaiting": "Inserisci un valore...",
     "inputPlaceholderReady": "Pronto...",
     "help": "Aiuto Console",

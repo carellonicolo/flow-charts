@@ -226,9 +226,53 @@ body {
 .main-content {
   display: flex;
   flex: 1;
+  min-height: 0;
   overflow: hidden;
-  margin-top: 80px;
-  height: calc(100vh - 80px);
+}
+
+/* La top bar unificata <carello-shell> è in flusso normale (non più fixed):
+   l'app-container è un flex column, quindi la barra occupa la sua altezza e
+   .main-content riempie lo spazio residuo senza offset manuali. */
+carello-shell {
+  flex: 0 0 auto;
+}
+
+/* Controlli specifici di Flow Chart iniettati nello slot della shell. Sono
+   nel light DOM: qui li adattiamo alla barra (pulsanti piatti, niente glass)
+   mantenendo i dropdown .glass-panel invariati. */
+.header-app-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.header-app-actions .btn-icon {
+  background: transparent;
+  border: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  color: var(--text-secondary, var(--text-color));
+}
+
+.header-app-actions .btn-icon:hover,
+.header-app-actions .btn-icon.active {
+  background: var(--glass-bg);
+  color: var(--primary-color);
+  border: none;
+}
+
+/* Contenitore dei controlli dell'app. Su desktop è trasparente e i controlli
+   restano inline nella barra; il trigger mobile è nascosto via .mobile-only. */
+.header-tools-wrap {
+  display: flex;
+  align-items: center;
+}
+
+.header-tools {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 /* ReactFlow Controls Dark Mode Override */
@@ -594,9 +638,70 @@ body {
     gap: 8px;
   }
 
-  .main-content {
-    margin-top: 70px;
-    height: calc(100vh - 70px);
+  /* Su mobile i dropdown del pannello possono essere larghi: la barra resta
+     comunque in flusso, quindi nessun offset manuale da ricalcolare. */
+
+  /* Header compatto: i controlli dell'app collassano in un pannello a discesa
+     ancorato al pulsante-strumenti, così la top bar non va in overflow. */
+  .header-tools-wrap {
+    position: relative;
+  }
+
+  .header-tools {
+    display: none;
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 4px;
+    width: 208px;
+    padding: 8px;
+    /* Niente backdrop-filter qui: creerebbe un containing block per i
+       sotto-dropdown position:fixed, impedendo loro di allargarsi al viewport.
+       Usiamo quindi uno sfondo pieno. */
+    background: var(--bg-color);
+    border: 1px solid var(--glass-border);
+    border-radius: 14px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+    z-index: 1000;
+  }
+
+  .header-tools.open {
+    display: flex;
+  }
+
+  /* Nel pannello i controlli tornano a pulsanti glass pieni, ben separati. */
+  .header-tools .btn-icon {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+  }
+
+  /* Pulsanti sempre visibili nella barra (menu, console, strumenti): compatti
+     per non far sforare la top bar su schermi stretti. */
+  .header-app-actions > .btn-icon,
+  .header-tools-toggle {
+    width: 34px;
+    height: 34px;
+    padding: 6px;
+  }
+
+  /* I sotto-dropdown (esempi, esercizi, tema colore, lingua) usano il
+     posizionamento desktop (absolute, right:0): dentro il pannello compatto
+     sforerebbero lo schermo. Su mobile li trasformiamo in un foglio a piena
+     larghezza ancorato sotto la top bar. Gli stili inline vanno forzati. */
+  .header-tools .glass-panel {
+    position: fixed !important;
+    top: 68px !important;
+    left: 10px !important;
+    right: 10px !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    max-height: 72vh !important;
+    overflow-y: auto !important;
   }
 
   /* Sidebar Drawer */
@@ -643,12 +748,19 @@ body {
     pointer-events: auto;
   }
 
+  /* Il componente Console imposta width/position inline (utili al resize su
+     desktop). Su mobile il posizionamento è gestito dal bottom-sheet
+     (.console-container, fixed + translateY): il wrapper torna quindi in flusso
+     (position:relative) così dà altezza al container che può scorrere fuori
+     schermo; forziamo piena larghezza altrimenti i 400px inline sforano. */
   .console-wrapper {
-    width: 100%;
-    height: 40vh;
+    width: 100% !important;
+    height: 45vh !important;
+    position: relative !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
     border-radius: 16px 16px 0 0;
-    bottom: 0;
-    right: 0;
     margin: 0;
     border-bottom: none;
     border-left: none;
