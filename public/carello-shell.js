@@ -186,7 +186,8 @@
       // icona del breadcrumb
       loadIcon(appIcon).then((svg) => {
         const slot = this.shadowRoot.getElementById('crumbIcon');
-        if (svg && slot) { slot.innerHTML = svg.replace('stroke="white"', 'stroke="' + accent + '"'); }
+        // currentColor: così l'icona segue --primary-color (tema) via CSS.
+        if (svg && slot) { slot.innerHTML = svg.replace('stroke="white"', 'stroke="currentColor"'); }
       });
 
       const btn = this.shadowRoot.getElementById('waffle');
@@ -452,14 +453,19 @@
         .bar{ height:60px; background:var(--c-bar-bg); border-bottom:1px solid var(--c-bar-bd);
               display:flex; align-items:center; gap:16px; padding:0 20px; }
         .brand{ display:flex; align-items:center; gap:10px; min-width:0; }
-        .logo{ width:34px; height:34px; border-radius:11px; background:linear-gradient(135deg,#ff8a4c,#e0662b);
-               display:flex; align-items:center; justify-content:center; box-shadow:0 4px 11px rgba(224,102,43,.38); flex-shrink:0; }
+        /* "Header unificato adattato": l'accento (logo, breadcrumb, waffle,
+           avatar) segue il tema colore scelto nell'app. Le custom properties
+           --primary-color / --theme-accent sono definite su .app-container ed
+           ereditano nello Shadow DOM; il fallback resta l'arancio Carello. */
+        .logo{ width:34px; height:34px; border-radius:11px;
+               background:linear-gradient(135deg, var(--theme-accent, #ff8a4c), var(--primary-color, #e0662b));
+               display:flex; align-items:center; justify-content:center; box-shadow:0 4px 11px rgba(0,0,0,.22); flex-shrink:0; }
         .name{ font-size:15px; font-weight:700; letter-spacing:-.01em; color:var(--c-ink); white-space:nowrap; }
         .sep{ color:var(--c-sep); }
-        .crumb{ display:inline-flex; align-items:center; gap:6px; font-size:13.5px; font-weight:600; white-space:nowrap; color:${accent}; text-decoration:none; cursor:pointer; border-radius:8px; padding:3px 7px; transition:background .15s; }
+        .crumb{ display:inline-flex; align-items:center; gap:6px; font-size:13.5px; font-weight:600; white-space:nowrap; color:var(--primary-color, ${accent}); text-decoration:none; cursor:pointer; border-radius:8px; padding:3px 7px; transition:background .15s; }
         .crumb:hover{ background:var(--c-crumb-hover); }
-        #crumbIcon{ display:inline-flex; width:18px; height:18px; }
-        #crumbIcon svg{ width:18px; height:18px; }
+        #crumbIcon{ display:inline-flex; width:18px; height:18px; color:var(--primary-color, ${accent}); }
+        #crumbIcon svg{ width:18px; height:18px; stroke:currentColor; }
         .spacer{ flex:1; }
         .actions{ display:flex; align-items:center; gap:4px; }
         /* Slot per i controlli specifici dell'app (es. Flow Chart: esempi,
@@ -473,8 +479,8 @@
                 color:var(--c-icon); background:transparent; border:none; cursor:pointer; }
         .icbtn:hover{ background:var(--c-hover); }
         .icbtn svg{ width:21px; height:21px; }
-        .waffle{ color:#E0662B; background:var(--c-waffle-bg); }
-        .avatar{ width:34px; height:34px; border-radius:999px; background:linear-gradient(135deg,#ff9a5c,#e0662b);
+        .waffle{ color:var(--primary-color, #E0662B); background:var(--c-waffle-bg); }
+        .avatar{ width:34px; height:34px; border-radius:999px; background:linear-gradient(135deg, var(--theme-accent, #ff9a5c), var(--primary-color, #e0662b));
                  color:#fff; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; margin-left:4px;
                  border:none; cursor:pointer; font-family:inherit; overflow:hidden; padding:0; }
         .avatar img{ width:100%; height:100%; border-radius:999px; object-fit:cover; display:block; }

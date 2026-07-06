@@ -128,13 +128,8 @@ export const Header = ({
             onClick={() => setIsColorDropdownOpen(!isColorDropdownOpen)}
             className={`btn btn-icon ${isColorDropdownOpen ? 'active' : ''}`}
             title={language === 'it' ? 'Cambia Tema Colore' : 'Change Color Theme'}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
           >
-            <Palette size={20} color={isColorDropdownOpen ? 'var(--primary-color)' : 'currentColor'} />
-            <ChevronDown size={14} style={{
-              transition: 'transform 0.2s',
-              transform: isColorDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)'
-            }} />
+            <Palette size={21} color={isColorDropdownOpen ? 'var(--primary-color)' : 'currentColor'} />
           </button>
 
           {isColorDropdownOpen && (
@@ -203,13 +198,8 @@ export const Header = ({
             onClick={() => setIsExampleDropdownOpen(!isExampleDropdownOpen)}
             className={`btn btn-icon ${isExampleDropdownOpen ? 'active' : ''}`}
             title={t('header.loadExample')}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
           >
-            <Library size={20} color={isExampleDropdownOpen ? 'var(--primary-color)' : 'currentColor'} />
-            <ChevronDown size={14} style={{
-              transition: 'transform 0.2s',
-              transform: isExampleDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)'
-            }} />
+            <Library size={21} color={isExampleDropdownOpen ? 'var(--primary-color)' : 'currentColor'} />
           </button>
 
           {isExampleDropdownOpen && (
@@ -280,13 +270,8 @@ export const Header = ({
             onClick={() => setIsExerciseDropdownOpen(!isExerciseDropdownOpen)}
             className={`btn btn-icon ${isExerciseDropdownOpen ? 'active' : ''}`}
             title={language === 'it' ? 'Libreria Esercizi (100+)' : 'Exercises Library (100+)'}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
           >
-            <BookOpen size={20} color={isExerciseDropdownOpen ? 'var(--primary-color)' : 'currentColor'} />
-            <ChevronDown size={14} style={{
-              transition: 'transform 0.2s',
-              transform: isExerciseDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)'
-            }} />
+            <BookOpen size={21} color={isExerciseDropdownOpen ? 'var(--primary-color)' : 'currentColor'} />
           </button>
 
           {isExerciseDropdownOpen && (
@@ -375,7 +360,7 @@ export const Header = ({
           className="btn btn-icon"
           title={t('header.help')}
         >
-          <HelpCircle size={20} />
+          <HelpCircle size={21} />
         </button>
 
         {/* Language Dropdown */}
@@ -384,13 +369,8 @@ export const Header = ({
             onClick={() => setIsLanguageDropdownOpen(!isLanguageDropdownOpen)}
             className="btn btn-icon"
             title={t('header.switchLanguage')}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
           >
-            <Globe size={18} />
-            <ChevronDown size={14} style={{
-              transition: 'transform 0.2s',
-              transform: isLanguageDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)'
-            }} />
+            <Globe size={21} />
           </button>
 
           {isLanguageDropdownOpen && (
@@ -457,7 +437,7 @@ export const Header = ({
           className="btn btn-icon header-link"
           title={t('header.githubRepo')}
         >
-          <Github size={20} />
+          <Github size={21} />
         </a>
           </div>
         </div>
