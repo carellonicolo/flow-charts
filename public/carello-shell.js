@@ -78,12 +78,11 @@
 
   // Tema: replica ESATTA della logica dell'app (hook useTheme + bootstrap in
   // index.html). Sorgente di verità = attributo data-theme su <html>, classe
-  // .dark e chiave localStorage 'ccna1_theme'. Così il pulsante tema della
+  // .dark e chiave localStorage 'nc_theme' (chiave unificata tra tutte le app).
   // shell sostituisce il vecchio ThemeToggle senza toccare la logica React.
-  // Flow Chart usa la chiave localStorage 'theme' (vedi App.tsx): condividerla
-  // fa sì che il toggle della shell e lo stato React condividano la stessa
-  // sorgente di verità, senza doppioni.
-  const THEME_KEY = 'theme';
+  // App.tsx condivide la stessa chiave 'nc_theme': toggle della shell e stato
+  // React usano un'unica sorgente di verità, senza doppioni.
+  const THEME_KEY = 'nc_theme';
   function readTheme() {
     return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
   }

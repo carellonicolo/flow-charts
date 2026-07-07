@@ -22,7 +22,8 @@ import './styles/main.css';
 
 function AppContent() {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    const saved = localStorage.getItem('theme');
+    // Chiave unificata 'nc_theme'; fallback alla vecchia 'theme' per migrazione.
+    const saved = localStorage.getItem('nc_theme') || localStorage.getItem('theme');
     return (saved as 'light' | 'dark') || 'dark';
   });
   const [colorTheme, setColorTheme] = useState<string>(() => {
@@ -163,7 +164,7 @@ function AppContent() {
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     document.documentElement.classList.toggle('dark', theme === 'dark');
-    localStorage.setItem('theme', theme);
+    localStorage.setItem('nc_theme', theme);
   }, [theme]);
 
   // Il toggle tema ora vive nella <carello-shell>, che scrive data-theme su

@@ -11,11 +11,14 @@
   <script src="/carello-shell.js" defer></script>
 
   <!-- Bootstrap tema: imposta data-theme PRIMA del render React così la shell
-       e l'app partono già sincronizzate (default 'dark' come App.tsx). -->
+       e l'app partono già sincronizzate (default 'dark' come App.tsx).
+       Chiave unificata 'nc_theme' (tutte le app); migrazione trasparente dalla
+       vecchia chiave 'theme'. -->
   <script>
     (function () {
       try {
-        var stored = localStorage.getItem('theme');
+        var stored = localStorage.getItem('nc_theme') || localStorage.getItem('theme');
+        if (stored && !localStorage.getItem('nc_theme')) localStorage.setItem('nc_theme', stored);
         var theme = stored || 'dark';
         document.documentElement.setAttribute('data-theme', theme);
         if (theme === 'dark') document.documentElement.classList.add('dark');
