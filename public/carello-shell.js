@@ -115,7 +115,22 @@
     return obj && typeof obj.a === 'string' && obj.a.trim() ? obj.a.trim() : null;
   }
 
-  async function fetchHub(hubUrl) {
+    // Ruolo (campo 'r' del cookie nc_profile) SOLO per visualizzazione nel menu account.
+  function readProfileRole() {
+    const obj = readProfile();
+    return obj && typeof obj.r === 'string' && obj.r.trim() ? obj.r.trim() : null;
+  }
+  // Etichetta italiana leggibile del ruolo tecnico dell'IdP.
+  function roleLabel(role) {
+    switch (role) {
+      case 'teacher': return 'Docente';
+      case 'super_admin': return 'Amministratore';
+      case 'student': return 'Studente';
+      default: return role ? role : 'Account';
+    }
+  }
+
+async function fetchHub(hubUrl) {
     const endpoint = hubUrl.replace(/\/$/, '') + '/api/db';
     // niente credentials: la lettura è pubblica, evita complicazioni CORS
     async function q(spec) {
@@ -240,6 +255,16 @@
         avatarBtn.innerHTML = SILHOUETTE;
         avatarBtn.title = 'Nessun utente connesso';
       }
+      // Intestazione del menu account: nome + ruolo dell'utente loggato.
+      const acctHead = this.shadowRoot.getElementById('acctHead');
+      if (acctHead && profileName) {
+        const nameEl = this.shadowRoot.getElementById('acctName');
+        const roleEl = this.shadowRoot.getElementById('acctRole');
+        if (nameEl) nameEl.textContent = profileName;
+        if (roleEl) roleEl.textContent = roleLabel(readProfileRole());
+        acctHead.style.display = '';
+      }
+
       if (authUrl && avatarBtn && accMenu) {
         const base = authUrl.replace(/\/$/, '');
         const profileLink = this.shadowRoot.getElementById('profileLink');
@@ -490,6 +515,10 @@
                border-radius:14px; box-shadow:var(--c-menu-shadow); padding:6px; z-index:1000;
                opacity:0; transform:translateY(-6px) scale(.98); pointer-events:none; transition:.16s ease; }
         .menu.open{ opacity:1; transform:none; pointer-events:auto; }
+        /* Intestazione del menu account: nome + ruolo dell'utente loggato. */
+        .accthead{ padding:9px 11px 8px; margin-bottom:4px; border-bottom:1px solid var(--c-pop-bd); }
+        .acctname{ font-size:13px; font-weight:700; color:var(--c-ink); line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .acctrole{ font-size:11px; font-weight:600; color:${accent}; margin-top:2px; }
         .mitem{ display:flex; align-items:center; gap:9px; padding:9px 11px; border-radius:9px; text-decoration:none;
                 color:var(--c-mitem); font-size:13px; font-weight:500; cursor:pointer; }
         .mitem:hover{ background:var(--c-mitem-hover); }
@@ -569,6 +598,10 @@
           <div class="wrap">
             <button class="avatar" id="avatarBtn" title="Account">${user}</button>
             <div class="menu" id="accMenu">
+              <div class="accthead" id="acctHead" style="display:none">
+                <div class="acctname" id="acctName"></div>
+                <div class="acctrole" id="acctRole"></div>
+              </div>
               <a class="mitem" id="dashLink" href="#" target="_top" style="display:none">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
                 <span id="dashLabel">Dashboard</span>
