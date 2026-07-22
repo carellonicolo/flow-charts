@@ -651,6 +651,8 @@ function AppContent() {
         user="NC"
         data-hub-url="https://nicolocarello.it"
         data-auth-url="https://auth.nicolocarello.it"
+        data-theme-key="theme"
+        data-console-url="https://auth.nicolocarello.it/admin"
       >
         <Header
           colorTheme={colorTheme}
