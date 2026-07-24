@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Flow Chart">
+  <!-- Kit Carello: stessa "scatola" delle altre app (squircle rx=14, gradiente
+       arancio del brand, glifo bianco). Simbolo: un diagramma di flusso — un
+       blocco di processo che scende in un blocco di decisione (il rombo). È la
+       firma inconfondibile di un flowchart, e lo stesso soggetto dell'icona
+       Workflow già usata dall'app nell'header. La forma resta distinta dalla
+       rete di VLSM e dalla lista di CCNA1 anche a 16px. -->
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff8a4c"/>
+      <stop offset="1" stop-color="#e0662b"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#g)"/>
+  <!-- Blocco di processo (rettangolo pieno, resta leggibile a 16px) -->
+  <rect x="21" y="8" width="22" height="12" rx="3" fill="#fff"/>
+  <!-- Freccia verso il basso (con un chiaro stacco dal rombo) -->
+  <g fill="none" stroke="#fff" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M32 20v5"/>
+    <path d="M28.5 22l3.5 3.5 3.5-3.5"/>
+  </g>
+  <!-- Blocco di decisione (rombo pieno) -->
+  <path d="M32 31l11 12-11 12-11-12z" fill="#fff"/>
+</svg>
